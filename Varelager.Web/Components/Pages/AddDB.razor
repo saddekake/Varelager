@@ -1,0 +1,21 @@
+﻿@page "/AddDB"
+@rendermode InteractiveServer
+@inject HttpClient Http
+
+<h3>AddDB</h3>
+
+<input type="text" @bind="inputValue" placeholder="enter name" />
+<button class="btn btn-primary" @onclick="AddToDB">add name</button>
+
+@code {
+    private string inputValue = "";
+
+    private async Task AddToDB()
+    {
+        if (!string.IsNullOrWhiteSpace(inputValue))
+        {
+            await Http.PostAsJsonAsync("https://localhost:7507/items", new { Name = inputValue });
+            inputValue = "";
+        }
+    }
+}

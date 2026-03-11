@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="Varelager.ApiService/Varelager.ApiService.csproj" />
+  <Project Path="Varelager.AppHost/Varelager.AppHost.csproj" />
+  <Project Path="Varelager.ServiceDefaults/Varelager.ServiceDefaults.csproj" />
+  <Project Path="Varelager.Web/Varelager.Web.csproj" />
+</Solution>
