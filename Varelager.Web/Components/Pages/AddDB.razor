@@ -4,27 +4,29 @@
 @using Varelager.Web.Models
 
 <h3>AddDB</h3>
-@* create *@
+@* ------------------------------------------ create *@
 <input type="text" @bind="createInput" placeholder="create" />
 <button class="btn btn-primary" @onclick="AddToTable">add name</button>
 
 <br />
 <br />
-@* return *@
+@* ------------------------------------------ return *@
 <button class="btn btn-primary" @onclick="ReturnAllInTable">return all rows</button>
 
 <br />
 <br />
-@* update *@
+@* ------------------------------------------ update *@
 <input type="text" @bind="updateInput" placeholder="update content" />
 <br />
-<input type="text" @bind="updateId" placeholder="id of row update" />
+<input type="number" @bind="updateId" placeholder="id of row update"/>
 <br />
 <button class="btn btn-primary" @onclick="UpdateRow">update</button>
 
 <br />
 <br />
-@* delete *@
+@* ------------------------------------------ delete *@
+<input type="number" @bind="deleteId" placeholder="id of row delete"/>
+<button class="btn btn-primary" @onclick="DeleteRow">delete</button>
 
 @* table *@
 <table class="table">
@@ -48,9 +50,11 @@
 
 @code {
     private string createInput = "";
+
     private string updateInput = "";
     private int updateId;
-    private string deleteInput = "";
+
+    private int deleteId;
 
     private List<Item> items = new();
 
@@ -58,20 +62,30 @@
     {
         if (!string.IsNullOrWhiteSpace(createInput))
         {
-            await Http.PostAsJsonAsync("https://localhost:7507/items", new { Name = createInput });
+            await Http.PostAsJsonAsync("https://localhost:7507/items", new { Name = createInput }); // send post request to url with createInput
             createInput = "";
         }
+        createInput = "";
     }
     private async Task ReturnAllInTable()
     {
-        items = await Http.GetFromJsonAsync<List<Item>>("https://localhost:7507/items");
+        items = await Http.GetFromJsonAsync<List<Item>>("https://localhost:7507/items"); // sends get request to url and turns data into list
     }
     private async Task UpdateRow()
     {
-        if (!string.IsNullOrWhiteSpace(updateInput))
+        if (!string.IsNullOrWhiteSpace(updateInput) && updateId >= 0)
         {
-            await Http.PatchAsJsonAsync($"https://localhost:7507/items/{updateId}", new { Name = updateInput });
+            await Http.PatchAsJsonAsync($"https://localhost:7507/items/{updateId}", new { Name = updateInput }); // sends patch request to url with id and input
         }
         updateInput = "";
+        updateId = 0;
+    }
+    private async Task DeleteRow()
+    {
+        if (deleteId >= 0)
+        {
+            await Http.DeleteAsync($"https://localhost:7507/items/{deleteId}"); // sends delete request to url with id
+        }
+        deleteId = 0;
     }
 }
