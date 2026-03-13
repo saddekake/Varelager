@@ -1,21 +1,77 @@
 ﻿@page "/AddDB"
 @rendermode InteractiveServer
 @inject HttpClient Http
+@using Varelager.Web.Models
 
 <h3>AddDB</h3>
+@* create *@
+<input type="text" @bind="createInput" placeholder="create" />
+<button class="btn btn-primary" @onclick="AddToTable">add name</button>
 
-<input type="text" @bind="inputValue" placeholder="enter name" />
-<button class="btn btn-primary" @onclick="AddToDB">add name</button>
+<br />
+<br />
+@* return *@
+<button class="btn btn-primary" @onclick="ReturnAllInTable">return all rows</button>
+
+<br />
+<br />
+@* update *@
+<input type="text" @bind="updateInput" placeholder="update content" />
+<br />
+<input type="text" @bind="updateId" placeholder="id of row update" />
+<br />
+<button class="btn btn-primary" @onclick="UpdateRow">update</button>
+
+<br />
+<br />
+@* delete *@
+
+@* table *@
+<table class="table">
+    <thead>
+        <tr>
+            <th>id</th>
+            <th>name</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var item in items)
+        {
+            <tr>
+                <td>@item.Id</td>
+                <td>@item.Name</td>
+            </tr>
+        }
+    </tbody>
+</table>
 
 @code {
-    private string inputValue = "";
+    private string createInput = "";
+    private string updateInput = "";
+    private int updateId;
+    private string deleteInput = "";
 
-    private async Task AddToDB()
+    private List<Item> items = new();
+
+    private async Task AddToTable()
     {
-        if (!string.IsNullOrWhiteSpace(inputValue))
+        if (!string.IsNullOrWhiteSpace(createInput))
         {
-            await Http.PostAsJsonAsync("https://localhost:7507/items", new { Name = inputValue });
-            inputValue = "";
+            await Http.PostAsJsonAsync("https://localhost:7507/items", new { Name = createInput });
+            createInput = "";
         }
+    }
+    private async Task ReturnAllInTable()
+    {
+        items = await Http.GetFromJsonAsync<List<Item>>("https://localhost:7507/items");
+    }
+    private async Task UpdateRow()
+    {
+        if (!string.IsNullOrWhiteSpace(updateInput))
+        {
+            await Http.PatchAsJsonAsync($"https://localhost:7507/items/{updateId}", new { Name = updateInput });
+        }
+        updateInput = "";
     }
 }

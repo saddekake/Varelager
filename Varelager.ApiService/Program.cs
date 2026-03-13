@@ -49,11 +49,49 @@ app.MapGet("/weatherforecast", () =>
 })
 .WithName("GetWeatherForecast");
 
-app.MapPost("/items", async (AppDbContext db, Item item) =>
+// api create row to db
+app.MapPost("/items", async (AppDbContext db, Item item) => // database, content
 {
-    db.Items.Add(item);
-    await db.SaveChangesAsync();
-    return Results.Ok(item);
+    db.Items.Add(item); // add row with content
+    await db.SaveChangesAsync(); // commit changes
+    return Results.Ok(item); // return new item with ok
+});
+
+// api return rows from db
+app.MapGet("/items", async (AppDbContext db) => // database
+{
+    return await db.Items.ToListAsync(); // return list of whole table
+});
+
+// api update row to db
+app.MapPatch("/items/{id}", async (AppDbContext db, int id, Item updatedItem) => // database, id of row, updated content
+{
+    var item = await db.Items.FindAsync(id); // find row by id
+
+    if (item == null) // null check
+    {
+        return Results.NotFound();
+    }
+    item.Name = updatedItem.Name; // update item Name column
+
+    await db.SaveChangesAsync(); // commit changes
+
+    return Results.Ok(item); // return updated item with ok
+});
+
+// api delete row from db
+app.MapDelete("/items/{id}", async (AppDbContext db, int id) => // database, id of row
+{
+    var item = await db.Items.FindAsync(id); // find row by id
+
+    if (item == null) // null check
+        return Results.NotFound();
+
+    db.Items.Remove(item); // remove row
+
+    await db.SaveChangesAsync(); // commit changes
+
+    return Results.Ok(); // return ok
 });
 
 app.MapDefaultEndpoints();
