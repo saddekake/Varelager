@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="to-do.txt" />
+  </Folder>
   <Project Path="Varelager.ApiService/Varelager.ApiService.csproj" />
   <Project Path="Varelager.AppHost/Varelager.AppHost.csproj" />
   <Project Path="Varelager.ServiceDefaults/Varelager.ServiceDefaults.csproj" />

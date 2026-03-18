@@ -1,0 +1,117 @@
+﻿@page "/PurchaseProduct"
+@rendermode InteractiveServer
+@inject HttpClient Http
+@using Varelager.Web.Models
+@using Varelager.ApiService.Data
+
+<select @bind="selectedValue">
+    <option value="Product" selected>Product</option>
+    <option value="Supplier">Supplier</option>
+</select>
+<br />
+<br />
+
+@* product *@
+<div class="@(selectedValue == "Product" ? "" : "hidden")">
+    <h3>Purchase Product</h3>
+    <p>Product name: </p> <input type="text" placeholder="Name" @bind="ProductInputName" /> <br /><br />
+    <p>Product amount: </p> <input type="number" placeholder="Amount" @bind="ProductInputAmount" /> <br /><br />
+</div>
+
+@* supplier *@
+<div class="@(selectedValue == "Supplier" ? "" : "hidden")">
+    <h3>Add Supplier</h3> <br />
+    <p>Supplier name: </p> <input type="text" placeholder="Name" @bind="SupplierInputName" /> <br /><br />
+    <p>Supplier phone: </p> <input type="text" placeholder="Phone" @bind="SupplierInputPhone" /> <br /><br />
+    <p>Supplier email: </p> <input type="text" placeholder="Email" @bind="SupplierInputEmail" /> <br /><br />
+    <p>Supplier country: </p> <input type="text" placeholder="Country" @bind="SupplierInputCountry" /> <br /><br />
+</div>
+
+@* common *@
+<br />
+<br />
+<button class="btn btn-primary" @onclick="Confirm">Confirm</button>
+<br />
+<br />
+
+@* table *@
+<table class="table">
+    <thead>
+        <tr>
+            <th>name</th>
+            <th>description</th>
+            <th>supplier id</th>
+            <th>weight</th>
+            <th>stock</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var item in items)
+        {
+            <tr>
+                <td>@item.Name</td>
+                <td>@item.Description</td>
+                <td>@item.SupplierId</td>
+                <td>@item.Weight</td>
+                <td>@item.Stock</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private string selectedValue = "Product";
+    private List<Product> items = new();
+    // product
+    string ProductInputName = "";
+    int ProductInputAmount;
+
+    // supplier
+    string SupplierInputName = "";
+    string SupplierInputPhone = "";
+    string SupplierInputEmail = "";
+    string SupplierInputCountry = "";
+
+    private async Task Confirm()
+    {
+        if (selectedValue == "Product")
+        {
+            if (ProductInputAmount < 1)
+            {
+                return; // element for displaying error?
+            }
+            var response = await Http.GetAsync($"https://localhost:7507/products/{ProductInputName}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                Console.WriteLine("Product not found");
+                return;
+            }
+
+            var product = await response.Content.ReadFromJsonAsync<Product>();
+
+            int productID = product.Id;
+            int newStock = product.Stock + ProductInputAmount;
+
+            await Http.PatchAsJsonAsync($"https://localhost:7507/products/{productID}", new
+            {
+                Stock = newStock
+            });
+            await ReturnAllInTable();
+        }
+        else if (selectedValue == "Supplier")
+        {
+            // todo
+            // this will create a new supplier row
+        }
+    }
+    private async Task ReturnAllInTable()
+    {
+        items = await Http.GetFromJsonAsync<List<Product>>("https://localhost:7507/products"); // sends get request to url and turns data into list
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        await ReturnAllInTable();
+    }
+}

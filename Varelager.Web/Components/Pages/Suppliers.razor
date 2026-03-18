@@ -1,0 +1,136 @@
+﻿@page "/Suppliers"
+@rendermode InteractiveServer
+@inject HttpClient Http
+@using Varelager.Web.Models
+@using Varelager.ApiService.Data
+
+<h3>Suppliers</h3>
+
+@* ------------------------------------------ create *@
+<input type="text" @bind="createInputName" placeholder="name" />
+<input type="text" @bind="createInputPhone" placeholder="phone" />
+<input type="text" @bind="createInputEmail" placeholder="email" />
+<input type="text" @bind="createInputCountry" placeholder="country" />
+<button class="btn btn-primary" @onclick="AddToTable">add name</button>
+
+<br />
+<br />
+@* ------------------------------------------ return *@
+<button class="btn btn-primary" @onclick="ReturnAllInTable">return all rows</button>
+
+<br />
+<br />
+@* ------------------------------------------ update *@
+<input type="text" @bind="updateInputName" placeholder="name" />
+<input type="text" @bind="updateInputPhone" placeholder="phone" />
+<input type="text" @bind="updateInputEmail" placeholder="email" />
+<input type="text" @bind="updateInputCountry" placeholder="country" />
+<br />
+<input type="number" @bind="updateId" placeholder="id of row update" />
+<br />
+<button class="btn btn-primary" @onclick="UpdateRow">update</button>
+
+<br />
+<br />
+@* ------------------------------------------ delete *@
+<input type="number" @bind="deleteId" placeholder="id of row delete" />
+<button class="btn btn-primary" @onclick="DeleteRow">delete</button>
+
+@* table *@
+<table class="table">
+    <thead>
+        <tr>
+            <th>id</th>
+            <th>name</th>
+            <th>phone</th>
+            <th>email</th>
+            <th>country</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var item in items)
+        {
+            <tr>
+                <td>@item.Id</td>
+                <td>@item.Name</td>
+                <td>@item.Phone</td>
+                <td>@item.Email</td>
+                <td>@item.Country</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private string createInputName = "";
+    private string createInputPhone = "";
+    private string createInputEmail = "";
+    private string createInputCountry = "";
+
+    private string updateInputName = "";
+    private string updateInputPhone = "";
+    private string updateInputEmail = "";
+    private string updateInputCountry = "";
+    private int updateId;
+
+    private int deleteId;
+
+    private List<Supplier> items = new();
+
+    private async Task AddToTable()
+    {
+        if (!string.IsNullOrWhiteSpace(createInputName) &&
+            !string.IsNullOrWhiteSpace(createInputPhone) &&
+            !string.IsNullOrWhiteSpace(createInputEmail) &&
+            !string.IsNullOrWhiteSpace(createInputCountry))
+        {
+            await Http.PostAsJsonAsync("https://localhost:7507/suppliers", new
+            {
+                Name = createInputName,
+                Phone = createInputPhone,
+                Email = createInputEmail,
+                Country = createInputCountry,
+            }); // send post request to url with variables
+        }
+        createInputName = "";
+        createInputPhone = "";
+        createInputEmail = "";
+        createInputCountry = "";
+    }
+    private async Task ReturnAllInTable()
+    {
+        items = await Http.GetFromJsonAsync<List<Supplier>>("https://localhost:7507/suppliers"); // sends get request to url and turns data into list
+    }
+    private async Task UpdateRow()
+    {
+        if (
+        !string.IsNullOrWhiteSpace(updateInputName) &&
+        !string.IsNullOrWhiteSpace(updateInputPhone) &&
+        !string.IsNullOrWhiteSpace(updateInputEmail) &&
+        !string.IsNullOrWhiteSpace(updateInputCountry) &&
+        updateId > 0)
+        {
+            await Http.PatchAsJsonAsync($"https://localhost:7507/suppliers/{updateId}", new
+            {
+                Name = updateInputName,
+                Phone = updateInputPhone,
+                Email = updateInputEmail,
+                Country = updateInputCountry,
+            }); // sends patch request to url with id and input
+        }
+        updateInputName = "";
+        updateInputPhone = "";
+        updateInputEmail = "";
+        updateInputCountry = "";
+        updateId = 0;
+    }
+    private async Task DeleteRow()
+    {
+        if (deleteId > 0)
+        {
+            await Http.DeleteAsync($"https://localhost:7507/suppliers/{deleteId}"); // sends delete request to url with id
+        }
+        deleteId = 0;
+    }
+}

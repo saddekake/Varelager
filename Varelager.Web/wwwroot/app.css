@@ -54,3 +54,8 @@ h1:focus {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+.hidden {
+    display: none;
+    pointer-events: none;
+    opacity: 0;
+}

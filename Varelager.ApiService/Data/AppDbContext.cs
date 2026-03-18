@@ -7,7 +7,11 @@ namespace Varelager.ApiService.Data
         public AppDbContext(DbContextOptions<AppDbContext> options) // sets options
             : base(options) { }
 
-        public DbSet<Item> Items { get; set; } = null!; // adds table to db
+        // adds tables to db
+        public DbSet<Item> Items { get; set; } = null!;
+        public DbSet<Product> Products { get; set; } = null!;
+        public DbSet<Customer> Customers { get; set; } = null!;
+        public DbSet<Supplier> Suppliers { get; set; } = null!;
     }
 
     public class Item // configure the table
@@ -22,7 +26,7 @@ namespace Varelager.ApiService.Data
         public string Name { get; set; } = "";
         public string Description { get; set; } = "";
         public int SupplierId { get; set; } // "<foreign key name>Id" efcore naming convention
-        public Supplier Supplier { get; set; } = null!; // foreign key
+        public Supplier? Supplier { get; set; } // foreign key
         public double Weight { get; set; }
         public int Stock { get; set; }
     }

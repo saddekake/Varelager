@@ -1,0 +1,17 @@
+TO-DO as of 18/03/2025 at 1500
+X-- return by name (search function)
+-- delete and update button next to each row, instead of showing ID
+X-- in products, enter supplier name instead of id, searches for supplier id based off name
+-- logging all purchases and sales (user responsible being shown)
+X-- page for storage manager to buy more product from supplier (private-facing)
+-- login page, with storage manager user being able to purchase product from supplier, salesperson being able to log sale of 
+product and add customers, admin being able to do both
+-- admin able to create new accounts and assign them as a supplier, salesperson, or admin
+-- calculating delivery costs (0.1kr per kilo per kilometer)
+
+- login page (public)
+- account creation page (admin)
+X- buy product page (storage manager, admin)
+- log sale page (salesperson, admin)
+- view inventory page (salesperson, storage manager, admin)
+- logging page (admin)
