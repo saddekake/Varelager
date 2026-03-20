@@ -13,6 +13,9 @@ product and add customers, admin being able to do both
 - account creation page (admin)
 X- buy product page (storage manager, admin)
 - register supplier page (storage manager, admin)
-- log sale page (salesperson, admin)
+X- log sale page (salesperson, admin)
 - view inventory page (salesperson, storage manager, admin)
 - logging page (admin)
+
+logging page:
+	new database for logging?

@@ -7,7 +7,11 @@ namespace Varelager.ApiService.TableFeatures.ProductFeatures
     {
         public static async Task<IResult> Handle(AppDbContext db)
         {
-            return Results.Ok(await db.Products.ToListAsync());
+            return Results.Ok(
+                await db.Products
+                .Include(p => p.Supplier)
+                .ToListAsync()
+            );
         }
     }
 }

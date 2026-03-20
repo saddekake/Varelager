@@ -27,8 +27,6 @@
 </div>*@
 
 @* common *@
-<br />
-<br />
 <button class="btn btn-primary" @onclick="Confirm">Confirm</button>
 <br />
 <br />
@@ -37,11 +35,11 @@
 <table class="table">
     <thead>
         <tr>
-            <th>name</th>
-            <th>description</th>
-            <th>supplier id</th>
-            <th>weight</th>
-            <th>stock</th>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Supplier name</th>
+            <th>Weight</th>
+            <th>Stock</th>
         </tr>
     </thead>
 
@@ -51,7 +49,7 @@
             <tr>
                 <td>@item.Name</td>
                 <td>@item.Description</td>
-                <td>@item.SupplierId</td>
+                <td>@item.Supplier.Name</td>
                 <td>@item.Weight</td>
                 <td>@item.Stock</td>
             </tr>
@@ -81,7 +79,7 @@
                 return; // element for displaying error?
             }
             var response = await Http.GetAsync($"https://localhost:7507/products/{ProductInputName}");
-
+            
             if (!response.IsSuccessStatusCode)
             {
                 Console.WriteLine("product not found");

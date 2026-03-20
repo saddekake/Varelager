@@ -3,8 +3,80 @@
 @inject HttpClient Http
 @using Varelager.ApiService.Data
 
-<h3>SellProduct</h3>
+<h3>Sell Product</h3>
+
+<p>Product: </p><input @bind="ProductInputName" placeholder="product"/><br /><br />
+<p>Amount sold: </p><input @bind="ProductInputAmount" type="number" placeholder="amount sold"/><br /><br />
+<p>Customer: </p><input @bind="ProductInputCustomer" placeholder="customer" /><br /><br />
+<button @onclick="Confirm" class="btn btn-primary">Confirm</button><br /><br />
+
+@* table *@
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Supplier name</th>
+            <th>Weight</th>
+            <th>Stock</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var item in items)
+        {
+            <tr>
+                <td>@item.Name</td>
+                <td>@item.Description</td>
+                <td>@item.Supplier.Name</td>
+                <td>@item.Weight</td>
+                <td>@item.Stock</td>
+            </tr>
+        }
+    </tbody>
+</table>
 
 @code {
+    private string ProductInputName = "";
+    private int ProductInputAmount;
+    private string ProductInputCustomer = ""; // for the sales log page
+    private List<Product> items = new();
 
+    private async Task ReturnAllInTable()
+    {
+        items = await Http.GetFromJsonAsync<List<Product>>("https://localhost:7507/products"); // sends get request to url and turns data into list
+    }
+
+    private async Task Confirm()
+    {
+        if (ProductInputAmount <= 0)
+        {
+            return;
+        }
+        var response = await Http.GetAsync($"https://localhost:7507/products/{ProductInputName}");
+
+        if (!response.IsSuccessStatusCode)
+        {
+            Console.WriteLine("product not found");
+            return;
+        }
+
+        var product = await response.Content.ReadFromJsonAsync<Product>();
+
+        int productID = product.Id;
+        int newStock = product.Stock - ProductInputAmount;
+
+        await Http.PatchAsJsonAsync($"https://localhost:7507/products/{productID}", new
+        {
+            Stock = newStock
+        });
+        ProductInputName = "";
+        ProductInputAmount = 0;
+        await ReturnAllInTable();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ReturnAllInTable();
+    }
 }
