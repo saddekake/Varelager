@@ -1,15 +1,14 @@
 ﻿@page "/PurchaseProduct"
 @rendermode InteractiveServer
 @inject HttpClient Http
-@using Varelager.Web.Models
 @using Varelager.ApiService.Data
 
-<select @bind="selectedValue">
+@*<select @bind="selectedValue">
     <option value="Product" selected>Product</option>
     <option value="Supplier">Supplier</option>
 </select>
 <br />
-<br />
+<br />*@
 
 @* product *@
 <div class="@(selectedValue == "Product" ? "" : "hidden")">
@@ -19,13 +18,13 @@
 </div>
 
 @* supplier *@
-<div class="@(selectedValue == "Supplier" ? "" : "hidden")">
+@*<div class="@(selectedValue == "Supplier" ? "" : "hidden")">
     <h3>Add Supplier</h3> <br />
     <p>Supplier name: </p> <input type="text" placeholder="Name" @bind="SupplierInputName" /> <br /><br />
     <p>Supplier phone: </p> <input type="text" placeholder="Phone" @bind="SupplierInputPhone" /> <br /><br />
     <p>Supplier email: </p> <input type="text" placeholder="Email" @bind="SupplierInputEmail" /> <br /><br />
     <p>Supplier country: </p> <input type="text" placeholder="Country" @bind="SupplierInputCountry" /> <br /><br />
-</div>
+</div>*@
 
 @* common *@
 <br />
@@ -67,11 +66,11 @@
     string ProductInputName = "";
     int ProductInputAmount;
 
-    // supplier
+    /* supplier
     string SupplierInputName = "";
     string SupplierInputPhone = "";
     string SupplierInputEmail = "";
-    string SupplierInputCountry = "";
+    string SupplierInputCountry = "";*/
 
     private async Task Confirm()
     {
@@ -85,7 +84,7 @@
 
             if (!response.IsSuccessStatusCode)
             {
-                Console.WriteLine("Product not found");
+                Console.WriteLine("product not found");
                 return;
             }
 
@@ -98,13 +97,15 @@
             {
                 Stock = newStock
             });
+            ProductInputName = "";
+            ProductInputAmount = 0;
             await ReturnAllInTable();
         }
-        else if (selectedValue == "Supplier")
+        /*else if (selectedValue == "Supplier")
         {
             // todo
             // this will create a new supplier row
-        }
+        }*/
     }
     private async Task ReturnAllInTable()
     {
