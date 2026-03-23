@@ -1,0 +1,127 @@
+﻿@page "/AccountCreation"
+@rendermode InteractiveServer
+@inject HttpClient Http
+@inject AuthService Auth
+@using Varelager.ApiService.Data
+@if (!Auth.IsLoggedIn)
+{
+    <p>You must log in to see this page</p>
+}
+else if (Auth.Type != "Admin")
+{
+    <p>Access denied</p>
+}
+else
+{
+    <h3>Accounts</h3>
+
+    @* ------------------------------------------ create *@
+    <input type="text" @bind="createInputUsername" placeholder="Username" />
+    <input type="text" @bind="createInputPassword" placeholder="Password" />
+    <input type="text" @bind="createInputType" placeholder="Type" />
+    <button class="btn btn-primary" @onclick="AddToTable">add account</button>
+
+    <br />
+    <br />
+    @* ------------------------------------------ return *@
+    <button class="btn btn-primary" @onclick="ReturnAllInTable">return all rows</button>
+
+    <br />
+    <br />
+    @* ------------------------------------------ update *@
+    <input type="text" @bind="updateInputUsername" placeholder="Username" />
+    <input type="text" @bind="updateInputType" placeholder="Type" />
+    <br />
+    <input type="number" @bind="updateId" placeholder="id of updating account" />
+    <br />
+    <button class="btn btn-primary" @onclick="UpdateRow">update</button>
+
+    <br />
+    <br />
+    @* ------------------------------------------ delete *@
+    <input type="number" @bind="deleteId" placeholder="id of deleting account" />
+    <button class="btn btn-primary" @onclick="DeleteRow">delete</button>
+
+    @* table *@
+    <table class="table">
+        <thead>
+            <tr>
+                <th>id</th>
+                <th>username</th>
+                <th>type</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var item in items)
+            {
+                <tr>
+                    <td>@item.Id</td>
+                    <td>@item.Name</td>
+                    <td>@item.Type</td>
+                </tr>
+            }
+    </tbody>
+</table>
+
+@code {
+    private string createInputUsername = "";
+    private string createInputPassword = "";
+    private string createInputType = "";
+
+    private string updateInputUsername = "";
+    private string updateInputType = "";
+    private int updateId;
+
+    private int deleteId;
+
+    private List<Account> items = new();
+
+    private async Task AddToTable()
+    {
+        if (!string.IsNullOrWhiteSpace(createInputUsername) &&
+            !string.IsNullOrWhiteSpace(createInputPassword) &&
+            !string.IsNullOrWhiteSpace(createInputType))
+        {
+            await Http.PostAsJsonAsync("https://localhost:7507/accounts", new
+            {
+                Name = createInputUsername,
+                Password = createInputPassword,
+                Type = createInputType
+            });// send post request to url with variables
+        }
+        createInputUsername = "";
+        createInputPassword = "";
+        createInputType = "";
+    }
+    private async Task ReturnAllInTable()
+    {
+        items = await Http.GetFromJsonAsync<List<Account>>("https://localhost:7507/accounts"); // sends get request to url and turns data into list
+    }
+    private async Task UpdateRow()
+    {
+        if (
+        !string.IsNullOrWhiteSpace(updateInputUsername) &&
+        !string.IsNullOrWhiteSpace(updateInputType) &&
+        updateId >= 0)
+        {
+            await Http.PatchAsJsonAsync($"https://localhost:7507/accounts/{updateId}", new
+            {
+                Name = updateInputUsername,
+                Type = updateInputType
+            }); // sends patch request to url with id and input
+        }
+        updateInputUsername = "";
+        updateInputType = "";
+        updateId = 0;
+    }
+    private async Task DeleteRow()
+    {
+        if (deleteId >= 0)
+        {
+            await Http.DeleteAsync($"https://localhost:7507/accounts/{deleteId}"); // sends delete request to url with id
+        }
+        deleteId = 0;
+    }
+}
+}

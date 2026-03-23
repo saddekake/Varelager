@@ -1,11 +1,81 @@
 ﻿@page "/Log"
 @rendermode InteractiveServer
 @inject HttpClient Http
+@inject AuthService Auth
 @using Varelager.ApiService.Data
 
-<h3>Log</h3>
-<p>hi</p>
+@if (!Auth.IsLoggedIn)
+{
+    <p>You must log in to see this page</p>
+}
+else if (Auth.Type != "Admin")
+{
+    <p>Access denied</p>
+}
+else
+{
+    <h3>Log</h3>
+
+    @* purchase table *@
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Product Name</th>
+                <th>Amount Bought</th>
+                <th>Account Responsible</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var purchase in purchases)
+            {
+                <tr>
+                    <td>@purchase.Product.Name</td>
+                    <td>@purchase.AmountSold</td>
+                    <td>@purchase.Account.Name</td>
+                </tr>
+            }
+    </tbody>
+</table>
+
+    @* sale table *@
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Product Name</th>
+                <th>Amount Sold</th>
+                <th>Customer First Name</th>
+                <th>Customer Last Name</th>
+                <th>Account Name</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var sale in sales)
+            {
+                <tr>
+                    <td>@sale.Product.Name</td>
+                    <td>@sale.AmountSold</td>
+                    <td>@sale.Customer.FName</td>
+                    <td>@sale.Customer.LName</td>
+                    <td>@sale.Account.Name</td>
+                </tr>
+            }
+    </tbody>
+</table>
 
 @code {
+    private List<Purchase_Log> purchases = new();
+    private List<Sale_Log> sales = new();
 
+    private async Task ReturnAllInTable()
+    {
+        purchases = await Http.GetFromJsonAsync<List<Purchase_Log>>("https://localhost:7507/purchase_Log"); // sends get request to url and turns data into list
+        sales = await Http.GetFromJsonAsync<List<Sale_Log>>("https://localhost:7507/sale_Log");
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        await ReturnAllInTable();
+    }
+}
 }

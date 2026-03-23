@@ -7,7 +7,8 @@ namespace Varelager.ApiService.TableFeatures.CustomerFeatures
     {
         public static async Task<IResult> Handle(AppDbContext db)
         {
-            return Results.Ok(await db.Customers.ToListAsync());
+            return Results.Ok(
+                await db.Customers.ToListAsync());
         }
     }
 }

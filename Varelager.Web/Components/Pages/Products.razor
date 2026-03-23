@@ -1,71 +1,82 @@
 ﻿@page "/Products"
 @rendermode InteractiveServer
 @inject HttpClient Http
+@inject AuthService Auth
 @using Varelager.ApiService.Data
 
-<h3>Products</h3>
+@if (!Auth.IsLoggedIn)
+{
+    <p>You must log in to see this page</p>
+}
+else if (Auth.Type != "Admin" && Auth.Type != "Warehouse")
+{
+    <p>Access denied</p>
+}
+else
+{
+    <h3>Products</h3>
 
-@* ------------------------------------------ create *@
-<input type="text" @bind="createInputName" placeholder="name" />
-<input type="text" @bind="createInputDescription" placeholder="description" />
-<input type="text" @bind="createInputSupplierId" placeholder="supplier id" />
-<input type="text" @bind="createInputWeight" placeholder="weight" />
-<input type="text" @bind="createInputStock" placeholder="stock" />
-<button class="btn btn-primary" @onclick="AddToTable">add name</button>
+    @* ------------------------------------------ create *@
+    <input type="text" @bind="createInputName" placeholder="name" />
+    <input type="text" @bind="createInputDescription" placeholder="description" />
+    <input type="text" @bind="createInputSupplierId" placeholder="supplier id" />
+    <input type="text" @bind="createInputWeight" placeholder="weight" />
+    <input type="text" @bind="createInputStock" placeholder="stock" />
+    <button class="btn btn-primary" @onclick="AddToTable">add name</button>
 
-<br />
-<br />
-@* ------------------------------------------ return *@
-<button class="btn btn-primary" @onclick="ReturnAllInTable">return all rows</button>
+    <br />
+    <br />
+    @* ------------------------------------------ return *@
+    <button class="btn btn-primary" @onclick="ReturnAllInTable">return all rows</button>
 
-<br />
-<br />
-@* ------------------------------------------ update *@
-<input type="text" @bind="updateInputName" placeholder="name" />
-<input type="text" @bind="updateInputDescription" placeholder="description" />
-<input type="text" @bind="updateInputSupplierId" placeholder="supplier id" />
-<input type="text" @bind="updateInputWeight" placeholder="weight" />
-<input type="text" @bind="updateInputStock" placeholder="stock" />
-<br />
-<input type="number" @bind="updateId" placeholder="id of row update" />
-<br />
-<button class="btn btn-primary" @onclick="UpdateRow">update</button>
+    <br />
+    <br />
+    @* ------------------------------------------ update *@
+    <input type="text" @bind="updateInputName" placeholder="name" />
+    <input type="text" @bind="updateInputDescription" placeholder="description" />
+    <input type="text" @bind="updateInputSupplierId" placeholder="supplier id" />
+    <input type="text" @bind="updateInputWeight" placeholder="weight" />
+    <input type="text" @bind="updateInputStock" placeholder="stock" />
+    <br />
+    <input type="number" @bind="updateId" placeholder="id of row update" />
+    <br />
+    <button class="btn btn-primary" @onclick="UpdateRow">update</button>
 
-<br />
-<br />
-@* ------------------------------------------ delete *@
-<input type="number" @bind="deleteId" placeholder="id of row delete" />
-<button class="btn btn-primary" @onclick="DeleteRow">delete</button>
+    <br />
+    <br />
+    @* ------------------------------------------ delete *@
+    <input type="number" @bind="deleteId" placeholder="id of row delete" />
+    <button class="btn btn-primary" @onclick="DeleteRow">delete</button>
 
-@* table *@
-<table class="table">
-    <thead>
-        <tr>
-            <th>id</th>
-            <th>name</th>
-            <th>description</th>
-            <th>supplier id</th>
-            <th>weight</th>
-            <th>stock</th>
-        </tr>
-    </thead>
-
-    <tbody>
-        @foreach (var item in items)
-        {
+    @* table *@
+    <table class="table">
+        <thead>
             <tr>
-                <td>@item.Id</td>
-                <td>@item.Name</td>
-                <td>@item.Description</td>
-                <td>@item.SupplierId</td>
-                <td>@item.Weight</td>
-                <td>@item.Stock</td>
+                <th>id</th>
+                <th>name</th>
+                <th>description</th>
+                <th>supplier id</th>
+                <th>weight</th>
+                <th>stock</th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
 
-@code {
+        <tbody>
+            @foreach (var item in items)
+            {
+                <tr>
+                    <td>@item.Id</td>
+                    <td>@item.Name</td>
+                    <td>@item.Description</td>
+                    <td>@item.SupplierId</td>
+                    <td>@item.Weight</td>
+                    <td>@item.Stock</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    @code {
     private string createInputName = "";
     private string createInputDescription = "";
     private int createInputSupplierId;
@@ -144,4 +155,5 @@
         }
         deleteId = 0;
     }
+}
 }

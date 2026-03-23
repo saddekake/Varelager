@@ -1,24 +1,35 @@
 ﻿@page "/PurchaseProduct"
 @rendermode InteractiveServer
 @inject HttpClient Http
+@inject AuthService Auth
 @using Varelager.ApiService.Data
 
-@*<select @bind="selectedValue">
+@if (!Auth.IsLoggedIn)
+{
+    <p>You must log in to see this page</p>
+}
+else if (Auth.Type != "Admin" && Auth.Type != "Warehouse")
+{
+    <p>Access denied</p>
+}
+else
+{
+    @*<select @bind="selectedValue">
     <option value="Product" selected>Product</option>
     <option value="Supplier">Supplier</option>
 </select>
 <br />
 <br />*@
 
-@* product *@
-<div class="@(selectedValue == "Product" ? "" : "hidden")">
-    <h3>Purchase Product</h3>
-    <p>Product name: </p> <input type="text" placeholder="Name" @bind="ProductInputName" /> <br /><br />
-    <p>Product amount: </p> <input type="number" placeholder="Amount" @bind="ProductInputAmount" /> <br /><br />
-</div>
+    @* product *@
+    <div class="@(selectedValue == "Product" ? "" : "hidden")">
+        <h3>Purchase Product</h3>
+        <p>Product name: </p> <input type="text" placeholder="Name" @bind="ProductInputName" /> <br /><br />
+        <p>Product amount: </p> <input type="number" placeholder="Amount" @bind="ProductInputAmount" /> <br /><br />
+    </div>
 
-@* supplier *@
-@*<div class="@(selectedValue == "Supplier" ? "" : "hidden")">
+    @* supplier *@
+    @*<div class="@(selectedValue == "Supplier" ? "" : "hidden")">
     <h3>Add Supplier</h3> <br />
     <p>Supplier name: </p> <input type="text" placeholder="Name" @bind="SupplierInputName" /> <br /><br />
     <p>Supplier phone: </p> <input type="text" placeholder="Phone" @bind="SupplierInputPhone" /> <br /><br />
@@ -26,38 +37,38 @@
     <p>Supplier country: </p> <input type="text" placeholder="Country" @bind="SupplierInputCountry" /> <br /><br />
 </div>*@
 
-@* common *@
-<button class="btn btn-primary" @onclick="Confirm">Confirm</button>
-<br />
-<br />
+    @* common *@
+    <button class="btn btn-primary" @onclick="Confirm">Confirm</button>
+    <br />
+    <br />
 
-@* table *@
-<table class="table">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Description</th>
-            <th>Supplier name</th>
-            <th>Weight</th>
-            <th>Stock</th>
-        </tr>
-    </thead>
-
-    <tbody>
-        @foreach (var item in items)
-        {
+    @* table *@
+    <table class="table">
+        <thead>
             <tr>
-                <td>@item.Name</td>
-                <td>@item.Description</td>
-                <td>@item.Supplier.Name</td>
-                <td>@item.Weight</td>
-                <td>@item.Stock</td>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Supplier name</th>
+                <th>Weight</th>
+                <th>Stock</th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
 
-@code {
+        <tbody>
+            @foreach (var item in items)
+            {
+                <tr>
+                    <td>@item.Name</td>
+                    <td>@item.Description</td>
+                    <td>@item.Supplier.Name</td>
+                    <td>@item.Weight</td>
+                    <td>@item.Stock</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    @code {
     private string selectedValue = "Product";
     private List<Product> items = new();
     // product
@@ -79,7 +90,7 @@
                 return; // element for displaying error?
             }
             var response = await Http.GetAsync($"https://localhost:7507/products/{ProductInputName}");
-            
+
             if (!response.IsSuccessStatusCode)
             {
                 Console.WriteLine("product not found");
@@ -95,6 +106,13 @@
             {
                 Stock = newStock
             });
+            // logging
+            await Http.PostAsJsonAsync("https://localhost:7507/purchase_Log", new
+            {
+                ProductId = productID,
+                AmountSold = ProductInputAmount,
+                AccountId = Auth.Id,
+            });
             ProductInputName = "";
             ProductInputAmount = 0;
             await ReturnAllInTable();
@@ -103,7 +121,7 @@
         {
             // todo
             // this will create a new supplier row
-        }*/
+            }*/
     }
     private async Task ReturnAllInTable()
     {
@@ -113,4 +131,5 @@
     {
         await ReturnAllInTable();
     }
+}
 }

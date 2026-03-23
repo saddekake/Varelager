@@ -1,0 +1,47 @@
+﻿@page "/AccountLogin"
+@inject HttpClient Http
+@inject AuthService Auth /* adds auth service */
+@rendermode InteractiveServer
+
+<h3>Login</h3>
+
+<input type="text" @bind="username" placeholder="Username" />
+<input type="password" @bind="password" placeholder="Password" />
+<button class="btn btn-primary" @onclick="Login">Login</button>
+
+<p>@message</p>
+
+@code {
+    private string username = "";
+    private string password = "";
+    private string message = "";
+
+    private async Task Login()
+    {
+        try
+        {
+            var response = await Http.PostAsJsonAsync("https://localhost:7507/accounts/login", new
+            {
+                Name = username,
+                Password = password
+            });
+
+            if (response.IsSuccessStatusCode)
+            {
+                var user = await response.Content.ReadFromJsonAsync<AuthService>();
+
+                Auth.Id = user.Id;
+                Auth.Name = user.Name;
+                Auth.Type = user.Type;
+
+                message = "Success";
+            }
+            else
+                message = await response.Content.ReadAsStringAsync();
+        }
+        catch
+        {
+            message = "Error: server unreachable";
+        }
+    }
+}

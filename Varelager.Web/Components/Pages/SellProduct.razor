@@ -1,42 +1,64 @@
 ﻿@page "/SellProduct"
 @rendermode InteractiveServer
 @inject HttpClient Http
+@inject AuthService Auth
 @using Varelager.ApiService.Data
 
-<h3>Sell Product</h3>
+@if (!Auth.IsLoggedIn)
+{
+    <p>You must log in to see this page</p>
+}
+else if (Auth.Type != "Admin" && Auth.Type != "Sales")
+{
+    <p>Access denied</p>
+}
+else
+{
+    <h3>Sell Product</h3>
 
-<p>Product: </p><input @bind="ProductInputName" placeholder="product"/><br /><br />
-<p>Amount sold: </p><input @bind="ProductInputAmount" type="number" placeholder="amount sold"/><br /><br />
-<p>Customer: </p><input @bind="ProductInputCustomer" placeholder="customer" /><br /><br />
-<button @onclick="Confirm" class="btn btn-primary">Confirm</button><br /><br />
+    <p>Product: </p>
+    <input @bind="ProductInputName" placeholder="product" />
+    <br />
+    <br />
+    <p>Amount sold: </p>
+    <input @bind="ProductInputAmount" type="number" placeholder="amount sold" />
+    <br />
+    <br />
+    <p>Customer: </p>
+    <input @bind="ProductInputCustomer" placeholder="customer" />
+    <br />
+    <br />
+    <button @onclick="Confirm" class="btn btn-primary">Confirm</button>
+    <br />
+    <br />
 
-@* table *@
-<table class="table">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Description</th>
-            <th>Supplier name</th>
-            <th>Weight</th>
-            <th>Stock</th>
-        </tr>
-    </thead>
-
-    <tbody>
-        @foreach (var item in items)
-        {
+    @* table *@
+    <table class="table">
+        <thead>
             <tr>
-                <td>@item.Name</td>
-                <td>@item.Description</td>
-                <td>@item.Supplier.Name</td>
-                <td>@item.Weight</td>
-                <td>@item.Stock</td>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Supplier name</th>
+                <th>Weight</th>
+                <th>Stock</th>
             </tr>
-        }
+        </thead>
+
+        <tbody>
+            @foreach (var item in items)
+            {
+                <tr>
+                    <td>@item.Name</td>
+                    <td>@item.Description</td>
+                    <td>@item.Supplier.Name</td>
+                    <td>@item.Weight</td>
+                    <td>@item.Stock</td>
+                </tr>
+            }
     </tbody>
 </table>
 
-@code {
+    @code {
     private string ProductInputName = "";
     private int ProductInputAmount;
     private string ProductInputCustomer = ""; // for the sales log page
@@ -49,19 +71,29 @@
 
     private async Task Confirm()
     {
-        if (ProductInputAmount <= 0)
+        if (ProductInputAmount <= 0 || String.IsNullOrWhiteSpace(ProductInputCustomer))
         {
             return;
         }
-        var response = await Http.GetAsync($"https://localhost:7507/products/{ProductInputName}");
+        var productresponse = await Http.GetAsync($"https://localhost:7507/products/{ProductInputName}");
 
-        if (!response.IsSuccessStatusCode)
+        if (!productresponse.IsSuccessStatusCode)
         {
             Console.WriteLine("product not found");
             return;
         }
 
-        var product = await response.Content.ReadFromJsonAsync<Product>();
+        var product = await productresponse.Content.ReadFromJsonAsync<Product>();
+
+        var customerresponse = await Http.GetAsync($"https://localhost:7507/customers/{ProductInputCustomer}");
+
+        if (!customerresponse.IsSuccessStatusCode)
+        {
+            Console.WriteLine("customer not found");
+            return;
+        }
+
+        var customer = await customerresponse.Content.ReadFromJsonAsync<Customer>();
 
         int productID = product.Id;
         int newStock = product.Stock - ProductInputAmount;
@@ -69,6 +101,14 @@
         await Http.PatchAsJsonAsync($"https://localhost:7507/products/{productID}", new
         {
             Stock = newStock
+        });
+        // logging
+        await Http.PostAsJsonAsync("https://localhost:7507/sale_Log", new
+        {
+            ProductId = productID,
+            AmountSold = ProductInputAmount,
+            CustomerId = customer.Id,
+            AccountId = Auth.Id,
         });
         ProductInputName = "";
         ProductInputAmount = 0;
@@ -79,4 +119,5 @@
     {
         await ReturnAllInTable();
     }
+}
 }

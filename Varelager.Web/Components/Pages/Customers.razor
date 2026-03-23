@@ -1,71 +1,82 @@
 ﻿@page "/Customers"
 @rendermode InteractiveServer
 @inject HttpClient Http
+@inject AuthService Auth
 @using Varelager.ApiService.Data
 
-<h3>Customers</h3>
+@if (!Auth.IsLoggedIn)
+{
+    <p>You must log in to see this page</p>
+}
+else if (Auth.Type != "Admin" && Auth.Type != "Sales")
+{
+    <p>Access denied</p>
+}
+else
+{
+    <h3>Customers</h3>
 
-@* ------------------------------------------ create *@
-<input type="text" @bind="createInputFName" placeholder="Fname" />
-<input type="text" @bind="createInputLName" placeholder="Lname" />
-<input type="text" @bind="createInputPhone" placeholder="phone" />
-<input type="text" @bind="createInputEmail" placeholder="email" />
-<input type="text" @bind="createInputCountry" placeholder="country" />
-<button class="btn btn-primary" @onclick="AddToTable">add name</button>
+    @* ------------------------------------------ create *@
+    <input type="text" @bind="createInputFName" placeholder="Fname" />
+    <input type="text" @bind="createInputLName" placeholder="Lname" />
+    <input type="text" @bind="createInputPhone" placeholder="phone" />
+    <input type="text" @bind="createInputEmail" placeholder="email" />
+    <input type="text" @bind="createInputCountry" placeholder="country" />
+    <button class="btn btn-primary" @onclick="AddToTable">add name</button>
 
-<br />
-<br />
-@* ------------------------------------------ return *@
-<button class="btn btn-primary" @onclick="ReturnAllInTable">return all rows</button>
+    <br />
+    <br />
+    @* ------------------------------------------ return *@
+    <button class="btn btn-primary" @onclick="ReturnAllInTable">return all rows</button>
 
-<br />
-<br />
-@* ------------------------------------------ update *@
-<input type="text" @bind="updateInputFName" placeholder="Fname" />
-<input type="text" @bind="updateInputLName" placeholder="Lname" />
-<input type="text" @bind="updateInputPhone" placeholder="phone" />
-<input type="text" @bind="updateInputEmail" placeholder="email" />
-<input type="text" @bind="updateInputCountry" placeholder="country" />
-<br />
-<input type="number" @bind="updateId" placeholder="id of row update" />
-<br />
-<button class="btn btn-primary" @onclick="UpdateRow">update</button>
+    <br />
+    <br />
+    @* ------------------------------------------ update *@
+    <input type="text" @bind="updateInputFName" placeholder="Fname" />
+    <input type="text" @bind="updateInputLName" placeholder="Lname" />
+    <input type="text" @bind="updateInputPhone" placeholder="phone" />
+    <input type="text" @bind="updateInputEmail" placeholder="email" />
+    <input type="text" @bind="updateInputCountry" placeholder="country" />
+    <br />
+    <input type="number" @bind="updateId" placeholder="id of row update" />
+    <br />
+    <button class="btn btn-primary" @onclick="UpdateRow">update</button>
 
-<br />
-<br />
-@* ------------------------------------------ delete *@
-<input type="number" @bind="deleteId" placeholder="id of row delete" />
-<button class="btn btn-primary" @onclick="DeleteRow">delete</button>
+    <br />
+    <br />
+    @* ------------------------------------------ delete *@
+    <input type="number" @bind="deleteId" placeholder="id of row delete" />
+    <button class="btn btn-primary" @onclick="DeleteRow">delete</button>
 
-@* table *@
-<table class="table">
-    <thead>
-        <tr>
-            <th>id</th>
-            <th>fname</th>
-            <th>lname</th>
-            <th>phone</th>
-            <th>email</th>
-            <th>country</th>
-        </tr>
-    </thead>
-
-    <tbody>
-        @foreach (var item in items)
-        {
+    @* table *@
+    <table class="table">
+        <thead>
             <tr>
-                <td>@item.Id</td>
-                <td>@item.FName</td>
-                <td>@item.LName</td>
-                <td>@item.Phone</td>
-                <td>@item.Email</td>
-                <td>@item.Country</td>
+                <th>id</th>
+                <th>fname</th>
+                <th>lname</th>
+                <th>phone</th>
+                <th>email</th>
+                <th>country</th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
 
-@code {
+        <tbody>
+            @foreach (var item in items)
+            {
+                <tr>
+                    <td>@item.Id</td>
+                    <td>@item.FName</td>
+                    <td>@item.LName</td>
+                    <td>@item.Phone</td>
+                    <td>@item.Email</td>
+                    <td>@item.Country</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    @code {
     private string createInputFName = "";
     private string createInputLName = "";
     private string createInputPhone = "";
@@ -140,4 +151,5 @@
         }
         deleteId = 0;
     }
+}
 }

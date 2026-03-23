@@ -14,6 +14,8 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddOutputCache();
 
+builder.Services.AddScoped<AuthService>(); // adds auth service
+
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
