@@ -1,17 +1,16 @@
 ﻿using Varelager.ApiService.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace Varelager.ApiService.TableFeatures.CustomerFeatures
+namespace Varelager.ApiService.TableFeatures.CountryFeatures
 {
-    public class ReturnCustomer
+    public class ReturnCountry
     {
         public static async Task<IResult> Handle(AppDbContext db)
         {
             return Results.Ok(
-                await db.Customers
-                .Include(c => c.Country)
+                await db.Countries
                 .ToListAsync()
-                );
+            );
         }
     }
 }

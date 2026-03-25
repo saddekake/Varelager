@@ -21,13 +21,15 @@ else
     <input type="text" @bind="createInputLName" placeholder="Lname" />
     <input type="text" @bind="createInputPhone" placeholder="phone" />
     <input type="text" @bind="createInputEmail" placeholder="email" />
-    <input type="text" @bind="createInputCountry" placeholder="country" />
-    <button class="btn btn-primary" @onclick="AddToTable">add name</button>
+    <select @bind="createInputCountry">
+        <option value=0>-- select country --</option>
 
-    <br />
-    <br />
-    @* ------------------------------------------ return *@
-    <button class="btn btn-primary" @onclick="ReturnAllInTable">return all rows</button>
+        @foreach (var country in countries)
+        {
+            <option value=@country.Id>@country.Name</option>
+        }
+    </select>
+    <button class="btn btn-primary" @onclick="AddToTable">add name</button>
 
     <br />
     <br />
@@ -36,7 +38,15 @@ else
     <input type="text" @bind="updateInputLName" placeholder="Lname" />
     <input type="text" @bind="updateInputPhone" placeholder="phone" />
     <input type="text" @bind="updateInputEmail" placeholder="email" />
-    <input type="text" @bind="updateInputCountry" placeholder="country" />
+    <select @bind="updateInputCountry">
+        <option value="">-- select country --</option>
+
+        @foreach (var country in countries)
+        {
+            <option value="@country.Id">@country.Name</option>
+        }
+    </select>
+
     <br />
     <input type="number" @bind="updateId" placeholder="id of row update" />
     <br />
@@ -70,7 +80,7 @@ else
                     <td>@item.LName</td>
                     <td>@item.Phone</td>
                     <td>@item.Email</td>
-                    <td>@item.Country</td>
+                    <td>@item.Country.Name</td>
                 </tr>
             }
         </tbody>
@@ -81,18 +91,19 @@ else
     private string createInputLName = "";
     private string createInputPhone = "";
     private string createInputEmail = "";
-    private string createInputCountry = "";
+    private int createInputCountry;
 
     private string updateInputFName = "";
     private string updateInputLName = "";
     private string updateInputPhone = "";
     private string updateInputEmail = "";
-    private string updateInputCountry = "";
+    private int updateInputCountry;
     private int updateId;
 
     private int deleteId;
 
     private List<Customer> items = new();
+    private List<Country> countries = new();
 
     private async Task AddToTable()
     {
@@ -100,25 +111,33 @@ else
             !string.IsNullOrWhiteSpace(createInputLName) &&
             !string.IsNullOrWhiteSpace(createInputPhone) &&
             !string.IsNullOrWhiteSpace(createInputEmail) &&
-            !string.IsNullOrWhiteSpace(createInputCountry))
+            createInputCountry >0)
         {
             await Http.PostAsJsonAsync("https://localhost:7507/customers", new { 
                 FName = createInputFName, 
                 Lname = createInputLName, 
                 Phone = createInputPhone,
                 Email = createInputEmail,
-                Country = createInputCountry }); // send post request to url with variables
+                CountryId = createInputCountry }); // send post request to url with variables
         }
         createInputFName = "";
         createInputLName = "";
         createInputPhone = "";
         createInputEmail = "";
-        createInputCountry = "";
+        createInputCountry = 0;
+
+        await ReturnAllInTable();
     }
     private async Task ReturnAllInTable()
     {
         items = await Http.GetFromJsonAsync<List<Customer>>("https://localhost:7507/customers"); // sends get request to url and turns data into list
     }
+
+    private async Task LoadCountries()
+    {
+        countries = await Http.GetFromJsonAsync<List<Country>>("https://localhost:7507/countries");
+    }
+
     private async Task UpdateRow()
     {
         if (
@@ -126,7 +145,7 @@ else
         !string.IsNullOrWhiteSpace(updateInputLName) &&
         !string.IsNullOrWhiteSpace(updateInputPhone) &&
         !string.IsNullOrWhiteSpace(updateInputEmail) &&
-        !string.IsNullOrWhiteSpace(updateInputCountry) &&
+        updateInputCountry >0 &&
         updateId >= 0)
         {
             await Http.PatchAsJsonAsync($"https://localhost:7507/customers/{updateId}", new { 
@@ -134,14 +153,16 @@ else
                 LName = updateInputLName,
                 Phone = updateInputPhone,
                 Email = updateInputEmail,
-                Country = updateInputCountry }); // sends patch request to url with id and input
+                CountryId = updateInputCountry }); // sends patch request to url with id and input
         }
         updateInputFName = "";
         updateInputLName = "";
         updateInputPhone = "";
         updateInputEmail = "";
-        updateInputCountry = "";
+        updateInputCountry = 0;
         updateId = 0;
+
+        await ReturnAllInTable();
     }
     private async Task DeleteRow()
     {
@@ -150,6 +171,13 @@ else
             await Http.DeleteAsync($"https://localhost:7507/customers/{deleteId}"); // sends delete request to url with id
         }
         deleteId = 0;
+        await ReturnAllInTable();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ReturnAllInTable();
+        await LoadCountries();
     }
 }
 }

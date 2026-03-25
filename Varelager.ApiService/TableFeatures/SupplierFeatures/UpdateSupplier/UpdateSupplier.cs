@@ -14,7 +14,7 @@ namespace Varelager.ApiService.TableFeatures.SupplierFeatures
             supplier.Name = updated.Name;
             supplier.Phone = updated.Phone;
             supplier.Email = updated.Email;
-            supplier.Country = updated.Country;
+            supplier.CountryId = updated.CountryId;
 
             await db.SaveChangesAsync();
 

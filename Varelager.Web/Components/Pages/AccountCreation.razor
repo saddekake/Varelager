@@ -18,13 +18,12 @@ else
     @* ------------------------------------------ create *@
     <input type="text" @bind="createInputUsername" placeholder="Username" />
     <input type="text" @bind="createInputPassword" placeholder="Password" />
-    <input type="text" @bind="createInputType" placeholder="Type" />
+    <select @bind="createInputType">
+        <option value="Admin">Admin</option>
+        <option value="Sales">Sales</option>
+        <option value="Warehouse">Warehouse</option>
+    </select>
     <button class="btn btn-primary" @onclick="AddToTable">add account</button>
-
-    <br />
-    <br />
-    @* ------------------------------------------ return *@
-    <button class="btn btn-primary" @onclick="ReturnAllInTable">return all rows</button>
 
     <br />
     <br />
@@ -93,6 +92,7 @@ else
         createInputUsername = "";
         createInputPassword = "";
         createInputType = "";
+        await ReturnAllInTable();
     }
     private async Task ReturnAllInTable()
     {
@@ -114,6 +114,7 @@ else
         updateInputUsername = "";
         updateInputType = "";
         updateId = 0;
+        await ReturnAllInTable();
     }
     private async Task DeleteRow()
     {
@@ -122,6 +123,11 @@ else
             await Http.DeleteAsync($"https://localhost:7507/accounts/{deleteId}"); // sends delete request to url with id
         }
         deleteId = 0;
+        await ReturnAllInTable();
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        await ReturnAllInTable();
     }
 }
 }

@@ -1,4 +1,4 @@
-TO-DO as of 23/03/2025 at 1500
+TO-DO as of 25/03/2025 at 1500
 X-- return by name (search function)
 X-- in products, enter supplier name instead of id, searches for supplier id based off name
 X-- logging all purchases and sales (user responsible being shown)
@@ -6,7 +6,7 @@ X-- page for storage manager to buy more product from supplier (private-facing)
 X-- login page, with storage manager user being able to purchase product from supplier, salesperson being able to log sale of 
 product and add customers, admin being able to do both
 X-- admin able to create new accounts and assign them as a storage manager, salesperson, or admin
--- calculating delivery costs (0.1kr per kilo per kilometer)
+X-- calculating delivery costs (0.1kr per kilo per kilometer)
 X-- add pages to nav menu
 
 -- update code to include Country as a foreign key

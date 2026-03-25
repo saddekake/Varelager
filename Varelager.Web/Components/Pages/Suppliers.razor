@@ -20,13 +20,15 @@ else
     <input type="text" @bind="createInputName" placeholder="name" />
     <input type="text" @bind="createInputPhone" placeholder="phone" />
     <input type="text" @bind="createInputEmail" placeholder="email" />
-    <input type="text" @bind="createInputCountry" placeholder="country" />
-    <button class="btn btn-primary" @onclick="AddToTable">add name</button>
+    <select @bind="createInputCountry">
+        <option value=0>-- select country --</option>
 
-    <br />
-    <br />
-    @* ------------------------------------------ return *@
-    <button class="btn btn-primary" @onclick="ReturnAllInTable">return all rows</button>
+        @foreach (var country in countries)
+        {
+            <option value=@country.Id>@country.Name</option>
+        }
+    </select>
+    <button class="btn btn-primary" @onclick="AddToTable">add name</button>
 
     <br />
     <br />
@@ -34,7 +36,14 @@ else
     <input type="text" @bind="updateInputName" placeholder="name" />
     <input type="text" @bind="updateInputPhone" placeholder="phone" />
     <input type="text" @bind="updateInputEmail" placeholder="email" />
-    <input type="text" @bind="updateInputCountry" placeholder="country" />
+    <select @bind="updateInputCountry">
+        <option value="">-- select country --</option>
+
+        @foreach (var country in countries)
+        {
+            <option value="@country.Id">@country.Name</option>
+        }
+    </select>
     <br />
     <input type="number" @bind="updateId" placeholder="id of row update" />
     <br />
@@ -66,7 +75,7 @@ else
                     <td>@item.Name</td>
                     <td>@item.Phone</td>
                     <td>@item.Email</td>
-                    <td>@item.Country</td>
+                    <td>@item.Country.Name</td>
                 </tr>
             }
         </tbody>
@@ -76,49 +85,57 @@ else
     private string createInputName = "";
     private string createInputPhone = "";
     private string createInputEmail = "";
-    private string createInputCountry = "";
+    private int createInputCountry;
 
     private string updateInputName = "";
     private string updateInputPhone = "";
     private string updateInputEmail = "";
-    private string updateInputCountry = "";
+    private int updateInputCountry;
     private int updateId;
 
     private int deleteId;
 
     private List<Supplier> items = new();
+    private List<Country> countries = new();
 
     private async Task AddToTable()
     {
         if (!string.IsNullOrWhiteSpace(createInputName) &&
             !string.IsNullOrWhiteSpace(createInputPhone) &&
             !string.IsNullOrWhiteSpace(createInputEmail) &&
-            !string.IsNullOrWhiteSpace(createInputCountry))
+            createInputCountry >0)
         {
             await Http.PostAsJsonAsync("https://localhost:7507/suppliers", new
             {
                 Name = createInputName,
                 Phone = createInputPhone,
                 Email = createInputEmail,
-                Country = createInputCountry,
+                CountryId = createInputCountry,
             }); // send post request to url with variables
         }
         createInputName = "";
         createInputPhone = "";
         createInputEmail = "";
-        createInputCountry = "";
+        createInputCountry = 0;
+        await ReturnAllInTable();
     }
     private async Task ReturnAllInTable()
     {
         items = await Http.GetFromJsonAsync<List<Supplier>>("https://localhost:7507/suppliers"); // sends get request to url and turns data into list
     }
+
+    private async Task LoadCountries()
+    {
+        countries = await Http.GetFromJsonAsync<List<Country>>("https://localhost:7507/countries");
+    }
+
     private async Task UpdateRow()
     {
         if (
         !string.IsNullOrWhiteSpace(updateInputName) &&
         !string.IsNullOrWhiteSpace(updateInputPhone) &&
         !string.IsNullOrWhiteSpace(updateInputEmail) &&
-        !string.IsNullOrWhiteSpace(updateInputCountry) &&
+        updateInputCountry > 0 &&
         updateId > 0)
         {
             await Http.PatchAsJsonAsync($"https://localhost:7507/suppliers/{updateId}", new
@@ -126,14 +143,15 @@ else
                 Name = updateInputName,
                 Phone = updateInputPhone,
                 Email = updateInputEmail,
-                Country = updateInputCountry,
+                CountryId = updateInputCountry,
             }); // sends patch request to url with id and input
         }
         updateInputName = "";
         updateInputPhone = "";
         updateInputEmail = "";
-        updateInputCountry = "";
+        updateInputCountry = 0;
         updateId = 0;
+        await ReturnAllInTable();
     }
     private async Task DeleteRow()
     {
@@ -142,6 +160,12 @@ else
             await Http.DeleteAsync($"https://localhost:7507/suppliers/{deleteId}"); // sends delete request to url with id
         }
         deleteId = 0;
+        await ReturnAllInTable();
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        await ReturnAllInTable();
+        await LoadCountries();
     }
 }
 }

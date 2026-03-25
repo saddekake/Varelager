@@ -15,7 +15,7 @@ namespace Varelager.ApiService.TableFeatures.CustomerFeatures
             customer.LName = updated.LName;
             customer.Phone = updated.Phone;
             customer.Email = updated.Email;
-            customer.Country = updated.Country;
+            customer.CountryId = updated.CountryId;
 
             await db.SaveChangesAsync();
 

@@ -25,10 +25,20 @@ else
     <br />
     <br />
     <p>Customer: </p>
-    <input @bind="ProductInputCustomer" placeholder="customer" />
+    <select @bind="ProductInputCustomer">
+        <option value=0>-- select customer --</option>
+
+        @foreach (var customer in customers)
+        {
+            <option value="@customer.Id">@($"{customer.FName} {customer.LName}")</option>
+        }
+    </select>
     <br />
     <br />
     <button @onclick="Confirm" class="btn btn-primary">Confirm</button>
+    <br />
+    <br />
+    <p>delivery cost: </p><p>@DeliveryCost</p>
     <br />
     <br />
 
@@ -61,17 +71,27 @@ else
     @code {
     private string ProductInputName = "";
     private int ProductInputAmount;
-    private string ProductInputCustomer = ""; // for the sales log page
+    private int ProductInputCustomer; // for the sales log page
+    private double DeliveryCost;
     private List<Product> items = new();
+    private List<Customer> customers = new();
 
     private async Task ReturnAllInTable()
     {
         items = await Http.GetFromJsonAsync<List<Product>>("https://localhost:7507/products"); // sends get request to url and turns data into list
     }
+    private async Task LoadCustomers()
+    {
+        customers = await Http.GetFromJsonAsync<List<Customer>>("https://localhost:7507/customers");
+    }
+    private void CalculateDelivery(double Weight, int Distance)
+    {
+        DeliveryCost = ((Weight * 0.1) * ProductInputAmount) * Distance;
+    }
 
     private async Task Confirm()
     {
-        if (ProductInputAmount <= 0 || String.IsNullOrWhiteSpace(ProductInputCustomer))
+        if (ProductInputAmount <= 0 || ProductInputCustomer <= 0)
         {
             return;
         }
@@ -85,18 +105,17 @@ else
 
         var product = await productresponse.Content.ReadFromJsonAsync<Product>();
 
-        var customerresponse = await Http.GetAsync($"https://localhost:7507/customers/{ProductInputCustomer}");
-
-        if (!customerresponse.IsSuccessStatusCode)
+        var customer = customers.FirstOrDefault(c => c.Id == ProductInputCustomer);
+        if (customer == null)
         {
             Console.WriteLine("customer not found");
             return;
         }
 
-        var customer = await customerresponse.Content.ReadFromJsonAsync<Customer>();
-
         int productID = product.Id;
         int newStock = product.Stock - ProductInputAmount;
+
+        CalculateDelivery(product.Weight, customer.Country.Distance);
 
         await Http.PatchAsJsonAsync($"https://localhost:7507/products/{productID}", new
         {
@@ -107,7 +126,7 @@ else
         {
             ProductId = productID,
             AmountSold = ProductInputAmount,
-            CustomerId = customer.Id,
+            CustomerId = ProductInputCustomer,
             AccountId = Auth.Id,
         });
         ProductInputName = "";
@@ -118,6 +137,7 @@ else
     protected override async Task OnInitializedAsync()
     {
         await ReturnAllInTable();
+        await LoadCustomers();
     }
 }
 }

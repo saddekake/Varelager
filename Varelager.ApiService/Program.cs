@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Varelager.ApiService.Data;
 using Varelager.ApiService.TableFeatures.AccountFeatures;
+using Varelager.ApiService.TableFeatures.CountryFeatures;
 using Varelager.ApiService.TableFeatures.CustomerFeatures;
 using Varelager.ApiService.TableFeatures.ProductFeatures;
 using Varelager.ApiService.TableFeatures.Purchase_LogFeatures;
@@ -50,6 +51,7 @@ app.MapSupplierEndpoints();     // map supplier endpoints
 app.MapAccountEndpoints();      // map account endpoints
 app.MapPurchase_LogEndpoints(); // map purchase_log endpoints
 app.MapSale_LogEndpoints();     // map sale_log endpoints
+app.MapCountryEndpoints();      // map country endpoints
 
 app.MapDefaultEndpoints();
 
