@@ -1,69 +1,125 @@
 ﻿@page "/AccountCreation"
 @rendermode InteractiveServer
 @inject HttpClient Http
-@inject AuthService Auth
+@inject AuthenticationStateProvider AuthStateProvider
 @using Varelager.ApiService.Data
-@if (!Auth.IsLoggedIn)
-{
-    <p>You must log in to see this page</p>
-}
-else if (Auth.Type != "Admin")
-{
-    <p>Access denied</p>
-}
-else
-{
-    <h3>Accounts</h3>
+<AuthorizeView Policy="AdminOnly">
+    <NotAuthorized>
+        <MudAlert Severity="Severity.Error" Variant="Variant.Filled">
+            Access denied
+        </MudAlert>
+    </NotAuthorized>
+    <Authorized>
+        <MudText Typo="Typo.h4" Class="mb-4">Accounts</MudText>
 
-    @* ------------------------------------------ create *@
-    <input type="text" @bind="createInputUsername" placeholder="Username" />
-    <input type="text" @bind="createInputPassword" placeholder="Password" />
-    <select @bind="createInputType">
-        <option value="Admin">Admin</option>
-        <option value="Sales">Sales</option>
-        <option value="Warehouse">Warehouse</option>
-    </select>
-    <button class="btn btn-primary" @onclick="AddToTable">add account</button>
+        <MudGrid Spacing="3">
+            <MudItem xs="12" md="6">
+                <MudPaper Class="pa-4" Elevation="2">
+                    <MudText Typo="Typo.h6" Class="mb-3">Create account</MudText>
 
-    <br />
-    <br />
-    @* ------------------------------------------ update *@
-    <input type="text" @bind="updateInputUsername" placeholder="Username" />
-    <input type="text" @bind="updateInputType" placeholder="Type" />
-    <br />
-    <input type="number" @bind="updateId" placeholder="id of updating account" />
-    <br />
-    <button class="btn btn-primary" @onclick="UpdateRow">update</button>
+                    <MudStack Spacing="2">
+                        <MudTextField T="string"
+                                      @bind-Value="createInputUsername"
+                                      Label="Username"
+                                      Variant="Variant.Outlined" />
 
-    <br />
-    <br />
-    @* ------------------------------------------ delete *@
-    <input type="number" @bind="deleteId" placeholder="id of deleting account" />
-    <button class="btn btn-primary" @onclick="DeleteRow">delete</button>
+                        <MudTextField T="string"
+                                      @bind-Value="createInputPassword"
+                                      Label="Password"
+                                      Variant="Variant.Outlined"
+                                      InputType="InputType.Password" />
 
-    @* table *@
-    <table class="table">
-        <thead>
-            <tr>
-                <th>id</th>
-                <th>username</th>
-                <th>type</th>
-            </tr>
-        </thead>
+                        <MudSelect T="string"
+                                   @bind-Value="createInputType"
+                                   Label="Type"
+                                   Variant="Variant.Outlined">
+                            <MudSelectItem Value="@("Admin")">Admin</MudSelectItem>
+                            <MudSelectItem Value="@("Sales")">Sales</MudSelectItem>
+                            <MudSelectItem Value="@("Warehouse")">Warehouse</MudSelectItem>
+                        </MudSelect>
 
-        <tbody>
-            @foreach (var item in items)
-            {
-                <tr>
-                    <td>@item.Id</td>
-                    <td>@item.Name</td>
-                    <td>@item.Type</td>
-                </tr>
-            }
-    </tbody>
-</table>
+                        <MudButton Color="Color.Primary"
+                                   Variant="Variant.Filled"
+                                   OnClick="AddToTable">
+                            Add account
+                        </MudButton>
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+                <MudPaper Class="pa-4" Elevation="2">
+                    <MudText Typo="Typo.h6" Class="mb-3">Update account</MudText>
+
+                    <MudStack Spacing="2">
+                        <MudTextField T="string"
+                                      @bind-Value="updateInputUsername"
+                                      Label="Username"
+                                      Variant="Variant.Outlined" />
+
+                        <MudTextField T="string"
+                                      @bind-Value="updateInputType"
+                                      Label="Type"
+                                      Variant="Variant.Outlined" />
+
+                        <MudNumericField T="int"
+                                         @bind-Value="updateId"
+                                         Label="ID of updating account"
+                                         Variant="Variant.Outlined" />
+
+                        <MudButton Color="Color.Primary"
+                                   Variant="Variant.Filled"
+                                   OnClick="UpdateRow">
+                            Update
+                        </MudButton>
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+                <MudPaper Class="pa-4" Elevation="2">
+                    <MudText Typo="Typo.h6" Class="mb-3">Delete account</MudText>
+
+                    <MudStack Spacing="2">
+                        <MudNumericField T="int"
+                                         @bind-Value="deleteId"
+                                         Label="ID of deleting account"
+                                         Variant="Variant.Outlined" />
+
+                        <MudButton Color="Color.Error"
+                                   Variant="Variant.Filled"
+                                   OnClick="DeleteRow">
+                            Delete
+                        </MudButton>
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12">
+                <MudPaper Class="pa-4" Elevation="2">
+                    <MudText Typo="Typo.h6" Class="mb-3">Accounts table</MudText>
+
+                    <MudTable Items="items" Dense="true" Hover="true" Striped="true">
+                        <HeaderContent>
+                            <MudTh>ID</MudTh>
+                            <MudTh>Username</MudTh>
+                            <MudTh>Type</MudTh>
+                        </HeaderContent>
+                        <RowTemplate context="acc">
+                            <MudTd DataLabel="ID">@acc.Id</MudTd>
+                            <MudTd DataLabel="Username">@acc.Name</MudTd>
+                            <MudTd DataLabel="Type">@acc.Type</MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    </Authorized>
+</AuthorizeView>
 
 @code {
+    private ClaimsPrincipal? currentUser;
+
     private string createInputUsername = "";
     private string createInputPassword = "";
     private string createInputType = "";
@@ -76,58 +132,81 @@ else
 
     private List<Account> items = new();
 
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        currentUser = authState.User;
+
+        if (IsAdmin(currentUser))
+        {
+            await ReturnAllInTable();
+        }
+    }
+
+    private static bool IsAdmin(ClaimsPrincipal? user)
+    {
+        if (user?.Identity?.IsAuthenticated != true)
+        {
+            return false;
+        }
+
+        return user.IsInRole("Admin")
+               || user.HasClaim(c => c.Type == "roles" && c.Value == "Admin")
+               || user.HasClaim(c => c.Type == "role" && c.Value == "Admin");
+    }
+
     private async Task AddToTable()
     {
         if (!string.IsNullOrWhiteSpace(createInputUsername) &&
             !string.IsNullOrWhiteSpace(createInputPassword) &&
             !string.IsNullOrWhiteSpace(createInputType))
         {
-            await Http.PostAsJsonAsync("https://localhost:7507/accounts", new
+            await Http.PostAsJsonAsync("accounts", new
             {
                 Name = createInputUsername,
                 Password = createInputPassword,
                 Type = createInputType
-            });// send post request to url with variables
+            });
         }
+
         createInputUsername = "";
         createInputPassword = "";
         createInputType = "";
         await ReturnAllInTable();
     }
+
     private async Task ReturnAllInTable()
     {
-        items = await Http.GetFromJsonAsync<List<Account>>("https://localhost:7507/accounts"); // sends get request to url and turns data into list
+        items = await Http.GetFromJsonAsync<List<Account>>("accounts") ?? new();
     }
+
     private async Task UpdateRow()
     {
-        if (
-        !string.IsNullOrWhiteSpace(updateInputUsername) &&
-        !string.IsNullOrWhiteSpace(updateInputType) &&
-        updateId >= 0)
+        if (!string.IsNullOrWhiteSpace(updateInputUsername) &&
+            !string.IsNullOrWhiteSpace(updateInputType) &&
+            updateId >= 0)
         {
-            await Http.PatchAsJsonAsync($"https://localhost:7507/accounts/{updateId}", new
+            await Http.PatchAsJsonAsync($"accounts/{updateId}", new
             {
                 Name = updateInputUsername,
                 Type = updateInputType
-            }); // sends patch request to url with id and input
+            });
         }
+
         updateInputUsername = "";
         updateInputType = "";
         updateId = 0;
         await ReturnAllInTable();
     }
+
     private async Task DeleteRow()
     {
         if (deleteId >= 0)
         {
-            await Http.DeleteAsync($"https://localhost:7507/accounts/{deleteId}"); // sends delete request to url with id
+            await Http.DeleteAsync($"accounts/{deleteId}");
         }
+
         deleteId = 0;
         await ReturnAllInTable();
     }
-    protected override async Task OnInitializedAsync()
-    {
-        await ReturnAllInTable();
-    }
-}
 }

@@ -67,6 +67,10 @@ namespace Varelager.ApiService.Data
                 .WithMany()
                 .HasForeignKey(p => p.AccountId)
                 .OnDelete(DeleteBehavior.NoAction);
+            modelBuilder.Entity<Account>()
+                .HasIndex(a => a.Auth0UserId)
+                .IsUnique()
+                .HasFilter("[Auth0UserId] IS NOT NULL");
         }
     }
 
@@ -137,6 +141,7 @@ namespace Varelager.ApiService.Data
         public string Name { get; set; } = "";
         public string PasswordHash { get; set; } = "";
         public string Type { get; set; } = "";
+        public string? Auth0UserId { get; set; }
     }
     public class AccountDto
     {

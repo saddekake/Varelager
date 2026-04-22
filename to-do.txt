@@ -1,4 +1,4 @@
-TO-DO as of 25/03/2025 at 1500
+TO-DO as of 10/04/2026 at 0900
 X-- return by name (search function)
 X-- in products, enter supplier name instead of id, searches for supplier id based off name
 X-- logging all purchases and sales (user responsible being shown)
@@ -9,8 +9,8 @@ X-- admin able to create new accounts and assign them as a storage manager, sale
 X-- calculating delivery costs (0.1kr per kilo per kilometer)
 X-- add pages to nav menu
 
--- update code to include Country as a foreign key
--- in sale page, calculate delivery costs
+X- update code to include Country as a foreign key
+X- in sale page, calculate delivery costs
 
 X- login page (public)
 X- account creation page (admin)
@@ -18,3 +18,9 @@ X- buy product page (storage manager, admin)
 X- register supplier page (storage manager, admin)
 X- log sale page (salesperson, admin)
 X- logging page (admin)
+
+X- update all pages to use mudblazor components
+X- replace current auth system with auth0
+
+X- handle unauthorized requests
+X- convert all pages to new Authorized

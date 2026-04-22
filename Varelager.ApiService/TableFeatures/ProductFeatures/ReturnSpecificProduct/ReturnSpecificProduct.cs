@@ -5,10 +5,9 @@ namespace Varelager.ApiService.TableFeatures.ProductFeatures
 {
     public class ReturnSpecificProduct
     {
-        public static async Task<IResult> Handle(AppDbContext db, string name)
+        public static async Task<IResult> Handle(AppDbContext db, int id)
         {
-            var product = await db.Products
-                .FirstOrDefaultAsync(p => p.Name.ToLower() == name.ToLower());
+            var product = await db.Products.FindAsync(id);
 
             if (product == null)
                 return Results.NotFound();

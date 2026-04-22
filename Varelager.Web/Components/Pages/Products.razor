@@ -1,100 +1,161 @@
 ﻿@page "/Products"
 @rendermode InteractiveServer
 @inject HttpClient Http
-@inject AuthService Auth
 @using Varelager.ApiService.Data
 
-@if (!Auth.IsLoggedIn)
-{
-    <p>You must log in to see this page</p>
-}
-else if (Auth.Type != "Admin" && Auth.Type != "Warehouse")
-{
-    <p>Access denied</p>
-}
-else
-{
-    <h3>Products</h3>
+<AuthorizeView Policy="WarehouseOnly">
+    <NotAuthorized>
+        <MudAlert Severity="Severity.Error" Variant="Variant.Filled">
+            Access denied
+        </MudAlert>
+    </NotAuthorized>
+    <Authorized>
+        <MudText Typo="Typo.h3">Products</MudText>
 
-    @* ------------------------------------------ create *@
-    <input type="text" @bind="createInputName" placeholder="name" />
-    <input type="text" @bind="createInputDescription" placeholder="description" />
-    <select @bind="createInputSupplierId">
-        <option value=0>-- select supplier --</option>
+        @* ------------------------------------------ create *@
+        <MudGrid Spacing="3">
+            <MudItem xs="12" md="6">
+                <MudPaper Class="pa-4" Elevation="2">
+                    <MudText Typo="Typo.h6" Class="mb-3">Create Product</MudText>
 
-        @foreach (var supplier in suppliers)
-        {
-            <option value=@supplier.Id>@supplier.Name</option>
-        }
-    </select>
-    <input type="text" @bind="createInputWeight" placeholder="weight" />
-    <input type="text" @bind="createInputStock" placeholder="stock" />
-    <button class="btn btn-primary" @onclick="AddToTable">add name</button>
+                    <MudStack Spacing="2">
+                        <MudTextField T="string"
+                                      @bind-Value="createInputName"
+                                      Label="Name"
+                                      Variant="Variant.Outlined" />
 
-    <br />
-    <br />
-    @* ------------------------------------------ update *@
-    <input type="text" @bind="updateInputName" placeholder="name" />
-    <input type="text" @bind="updateInputDescription" placeholder="description" />
-    <select @bind="updateInputSupplierId">
-        <option value=0>-- select supplier --</option>
+                        <MudTextField T="string"
+                                      @bind-Value="createInputDescription"
+                                      Label="Description"
+                                      Variant="Variant.Outlined" />
 
-        @foreach (var supplier in suppliers)
-        {
-            <option value=@supplier.Id>@supplier.Name</option>
-        }
-    </select>
-    <input type="number" @bind="updateInputWeight" placeholder="weight" />
-    <input type="number" @bind="updateInputStock" placeholder="stock" />
-    <br />
-    <input type="number" @bind="updateId" placeholder="id of row update" />
-    <br />
-    <button class="btn btn-primary" @onclick="UpdateRow">update</button>
+                        <MudTextField T="double"
+                                      @bind-Value="createInputWeight"
+                                      Label="Weight"
+                                      Variant="Variant.Outlined" />
 
-    <br />
-    <br />
-    @* ------------------------------------------ delete *@
-    <input type="number" @bind="deleteId" placeholder="id of row delete" />
-    <button class="btn btn-primary" @onclick="DeleteRow">delete</button>
+                        <MudTextField T="int"
+                                      @bind-Value="createInputStock"
+                                      Label="Stock"
+                                      Variant="Variant.Outlined" />
 
-    @* table *@
-    <table class="table">
-        <thead>
-            <tr>
-                <th>id</th>
-                <th>name</th>
-                <th>description</th>
-                <th>supplier id</th>
-                <th>weight</th>
-                <th>stock</th>
-            </tr>
-        </thead>
+                        <MudSelect T="int?"
+                                   @bind-Value="createInputSupplierId"
+                                   Label="Supplier"
+                                   Placeholder="-- Select Supplier --"
+                                   Variant="Variant.Outlined">
 
-        <tbody>
-            @foreach (var item in items)
-            {
-                <tr>
-                    <td>@item.Id</td>
-                    <td>@item.Name</td>
-                    <td>@item.Description</td>
-                    <td>@item.Supplier.Name</td>
-                    <td>@item.Weight</td>
-                    <td>@item.Stock</td>
-                </tr>
-            }
-        </tbody>
-    </table>
+                            @foreach (var supplier in suppliers)
+                            {
+                                <MudSelectItem Value="@((int?)supplier.Id)">
+                                    @supplier.Name
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
 
-    @code {
+                        <MudButton Color="Color.Primary"
+                                   Variant="Variant.Filled"
+                                   OnClick="AddToTable">
+                            Add Product
+                        </MudButton>
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+            @* ------------------------------------------ update *@
+            <MudItem xs="12" md="6">
+                <MudPaper Class="pa-4" Elevation="2">
+                    <MudText Typo="Typo.h6" Class="mb-3">Update Product</MudText>
+
+                    <MudStack Spacing="2">
+                        <MudTextField T="string"
+                                      @bind-Value="updateInputName"
+                                      Label="Name"
+                                      Variant="Variant.Outlined" />
+
+                        <MudTextField T="string"
+                                      @bind-Value="updateInputDescription"
+                                      Label="Description"
+                                      Variant="Variant.Outlined" />
+
+                        <MudTextField T="double"
+                                      @bind-Value="updateInputWeight"
+                                      Label="Weight"
+                                      Variant="Variant.Outlined" />
+
+                        <MudTextField T="int"
+                                      @bind-Value="updateInputStock"
+                                      Label="Stock"
+                                      Variant="Variant.Outlined" />
+
+                        <MudSelect T="int?"
+                                   @bind-Value="updateInputSupplierId"
+                                   Label="Supplier"
+                                   Placeholder="-- Select Supplier --"
+                                   Variant="Variant.Outlined">
+
+                            @foreach (var supplier in suppliers)
+                            {
+                                <MudSelectItem Value="@((int?)supplier.Id)">
+                                    @supplier.Name
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
+
+                        <MudButton Color="Color.Primary"
+                                   Variant="Variant.Filled"
+                                   OnClick="UpdateRow">
+                            Update Product
+                        </MudButton>
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+            @* ------------------------------------------ delete *@
+            <MudItem xs="8" md="4">
+                <MudPaper Class="pa-4" Elevation="2">
+                    <MudText Typo="Typo.h6" Class="mb-3">Delete Product</MudText>
+                    <MudInput T="int" @bind-Value="deleteId" placeholder="ID of deleting row" />
+                    <MudButton Color="Color.Primary" Variant=Variant.Filled" OnClick="DeleteRow">Delete</MudButton>
+                </MudPaper>
+            </MudItem>
+
+            @* table *@
+            <MudItem xs="12">
+                <MudPaper Class="pa-4" Elevation="2">
+                    <MudText Typo="Typo.h6" Class="mb-3">Products Table</MudText>
+
+                    <MudTable Items="items" Dense="true" Hover="true" Striped="true">
+                        <HeaderContent>
+                            <MudTh>ID</MudTh>
+                            <MudTh>Name</MudTh>
+                            <MudTh>Description</MudTh>
+                            <MudTh>Weight</MudTh>
+                            <MudTh>Stock</MudTh>
+                            <MudTh>Supplier</MudTh>
+                        </HeaderContent>
+                        <RowTemplate context="pro">
+                            <MudTd DataLabel="ID">@pro.Id</MudTd>
+                            <MudTd DataLabel="Name">@pro.Name</MudTd>
+                            <MudTd DataLabel="Description">@pro.Description</MudTd>
+                            <MudTd DataLabel="Weight">@pro.Weight</MudTd>
+                            <MudTd DataLabel="Stock">@pro.Stock</MudTd>
+                            <MudTd DataLabel="Supplier">@pro.Supplier.Name</MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    </Authorized>
+</AuthorizeView>
+@code {
     private string createInputName = "";
     private string createInputDescription = "";
-    private int createInputSupplierId;
+    private int? createInputSupplierId;
     private double createInputWeight;
     private int createInputStock;
 
     private string updateInputName = "";
     private string updateInputDescription = "";
-    private int updateInputSupplierId;
+    private int? updateInputSupplierId;
     private double updateInputWeight;
     private int updateInputStock;
     private int updateId;
@@ -177,5 +238,4 @@ else
         await ReturnAllInTable();
         await LoadSuppliers();
     }
-}
 }

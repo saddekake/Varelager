@@ -1,135 +1,126 @@
 ﻿@page "/PurchaseProduct"
 @rendermode InteractiveServer
 @inject HttpClient Http
-@inject AuthService Auth
 @using Varelager.ApiService.Data
 
-@if (!Auth.IsLoggedIn)
-{
-    <p>You must log in to see this page</p>
-}
-else if (Auth.Type != "Admin" && Auth.Type != "Warehouse")
-{
-    <p>Access denied</p>
-}
-else
-{
-    @*<select @bind="selectedValue">
-    <option value="Product" selected>Product</option>
-    <option value="Supplier">Supplier</option>
-</select>
-<br />
-<br />*@
+<AuthorizeView Policy="WarehouseOnly">
+    <NotAuthorized>
+        <MudAlert Severity="Severity.Error" Variant="Variant.Filled">
+            Access denied
+        </MudAlert>
+    </NotAuthorized>
+    <Authorized>
 
-    @* product *@
-    <div class="@(selectedValue == "Product" ? "" : "hidden")">
-        <h3>Purchase Product</h3>
-        <p>Product name: </p> <input type="text" placeholder="Name" @bind="ProductInputName" /> <br /><br />
-        <p>Product amount: </p> <input type="number" placeholder="Amount" @bind="ProductInputAmount" /> <br /><br />
-    </div>
+        <MudGrid Spacing="3">
+            <MudItem xs="12" md="6">
+                <MudPaper Class="pa-4" Elevation="2">
+                    <MudText Typo="Typo.h6" Class="mb-3">Purchase Product</MudText>
 
-    @* supplier *@
-    @*<div class="@(selectedValue == "Supplier" ? "" : "hidden")">
-    <h3>Add Supplier</h3> <br />
-    <p>Supplier name: </p> <input type="text" placeholder="Name" @bind="SupplierInputName" /> <br /><br />
-    <p>Supplier phone: </p> <input type="text" placeholder="Phone" @bind="SupplierInputPhone" /> <br /><br />
-    <p>Supplier email: </p> <input type="text" placeholder="Email" @bind="SupplierInputEmail" /> <br /><br />
-    <p>Supplier country: </p> <input type="text" placeholder="Country" @bind="SupplierInputCountry" /> <br /><br />
-</div>*@
+                    <MudStack Spacing="2">
+                        <MudSelect T="int?"
+                                   @bind-Value="ProductInputId"
+                                   Label="Product"
+                                   Placeholder="-- Select Product --"
+                                   Variant="Variant.Outlined">
+                            @foreach (var product in items)
+                            {
+                                <MudSelectItem Value="@((int?)product.Id)">
+                                    @product.Name
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
 
-    @* common *@
-    <button class="btn btn-primary" @onclick="Confirm">Confirm</button>
-    <br />
-    <br />
+                        <MudTextField T="int"
+                                      @bind-Value="ProductInputAmount"
+                                      Label="Amount"
+                                      Variant="Variant.Outlined" />
 
-    @* table *@
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Description</th>
-                <th>Supplier name</th>
-                <th>Weight</th>
-                <th>Stock</th>
-            </tr>
-        </thead>
+                        <MudButton Color="Color.Primary"
+                                   Variant="Variant.Filled"
+                                   OnClick="Confirm">
+                            Purchase Product
+                        </MudButton>
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
 
-        <tbody>
-            @foreach (var item in items)
-            {
-                <tr>
-                    <td>@item.Name</td>
-                    <td>@item.Description</td>
-                    <td>@item.Supplier.Name</td>
-                    <td>@item.Weight</td>
-                    <td>@item.Stock</td>
-                </tr>
-            }
-        </tbody>
-    </table>
+            <MudItem xs="12">
+                <MudPaper Class="pa-4" Elevation="2">
+                    <MudText Typo="Typo.h6" Class="mb-3">Products Table</MudText>
 
-    @code {
-    private string selectedValue = "Product";
+                    <MudTable Items="items" Dense="true" Hover="true" Striped="true">
+                        <HeaderContent>
+                            <MudTh>ID</MudTh>
+                            <MudTh>Name</MudTh>
+                            <MudTh>Description</MudTh>
+                            <MudTh>Weight</MudTh>
+                            <MudTh>Stock</MudTh>
+                            <MudTh>Supplier</MudTh>
+                        </HeaderContent>
+                        <RowTemplate context="pro">
+                            <MudTd DataLabel="ID">@pro.Id</MudTd>
+                            <MudTd DataLabel="Name">@pro.Name</MudTd>
+                            <MudTd DataLabel="Description">@pro.Description</MudTd>
+                            <MudTd DataLabel="Weight">@pro.Weight</MudTd>
+                            <MudTd DataLabel="Stock">@pro.Stock</MudTd>
+                            <MudTd DataLabel="Supplier">@pro.Supplier.Name</MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    </Authorized>
+</AuthorizeView>
+
+@code {
     private List<Product> items = new();
-    // product
-    string ProductInputName = "";
-    int ProductInputAmount;
-
-    /* supplier
-    string SupplierInputName = "";
-    string SupplierInputPhone = "";
-    string SupplierInputEmail = "";
-    string SupplierInputCountry = "";*/
+    private int? ProductInputId;
+    private int ProductInputAmount;
 
     private async Task Confirm()
     {
-        if (selectedValue == "Product")
+        if (ProductInputId is null || ProductInputAmount < 1)
         {
-            if (ProductInputAmount < 1)
-            {
-                return; // element for displaying error?
-            }
-            var response = await Http.GetAsync($"https://localhost:7507/products/{ProductInputName}");
-
-            if (!response.IsSuccessStatusCode)
-            {
-                Console.WriteLine("product not found");
-                return;
-            }
-
-            var product = await response.Content.ReadFromJsonAsync<Product>();
-
-            int productID = product.Id;
-            int newStock = product.Stock + ProductInputAmount;
-
-            await Http.PatchAsJsonAsync($"https://localhost:7507/products/{productID}", new
-            {
-                Stock = newStock
-            });
-            // logging
-            await Http.PostAsJsonAsync("https://localhost:7507/purchase_Log", new
-            {
-                ProductId = productID,
-                AmountSold = ProductInputAmount,
-                AccountId = Auth.Id,
-            });
-            ProductInputName = "";
-            ProductInputAmount = 0;
-            await ReturnAllInTable();
+            return;
         }
-        /*else if (selectedValue == "Supplier")
+
+        var response = await Http.GetAsync($"https://localhost:7507/products/{ProductInputId}");
+
+        if (!response.IsSuccessStatusCode)
         {
-            // todo
-            // this will create a new supplier row
-            }*/
+            Console.WriteLine("product not found");
+            return;
+        }
+
+        var product = await response.Content.ReadFromJsonAsync<Product>();
+
+        int productID = product.Id;
+        int newStock = product.Stock + ProductInputAmount;
+
+        await Http.PatchAsJsonAsync($"https://localhost:7507/products/{productID}", new
+        {
+            Stock = newStock
+        });
+
+        await Http.PostAsJsonAsync("https://localhost:7507/purchase_Log", new
+        {
+            ProductId = productID,
+            AmountSold = ProductInputAmount,
+        });
+
+        ProductInputId = 0;
+        ProductInputAmount = 0;
+
+        await ReturnAllInTable();
     }
+
     private async Task ReturnAllInTable()
     {
-        items = await Http.GetFromJsonAsync<List<Product>>("https://localhost:7507/products"); // sends get request to url and turns data into list
+        items = await Http.GetFromJsonAsync<List<Product>>("https://localhost:7507/products");
     }
+
     protected override async Task OnInitializedAsync()
     {
         await ReturnAllInTable();
     }
-}
 }

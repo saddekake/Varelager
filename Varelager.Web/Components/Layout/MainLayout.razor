@@ -1,25 +1,78 @@
 ﻿@inherits LayoutComponentBase
-@inject AuthService Auth
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Components.Authorization
+@inject NavigationManager Nav
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+<CascadingAuthenticationState>
+    <MudThemeProvider @rendermode="InteractiveServer" />
+    <MudPopoverProvider @rendermode="InteractiveServer" />
+    <MudDialogProvider @rendermode="InteractiveServer" />
+    <MudSnackbarProvider @rendermode="InteractiveServer" />
 
-    <main>
-        <div class="top-row px-4">
-            @if (!Auth.IsLoggedIn)
-            {
-                <NavLink href="/AccountLogin">Login</NavLink>
-            }
-            else
-            {
-                <span>@Auth.Name</span>
-            }
-        </div>
+    <MudLayout>
 
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
-</div>
+        <!-- Top bar -->
+        <MudAppBar Elevation="1">
+            <MudIconButton Icon="@Icons.Material.Filled.Menu"
+                           Color="Color.Inherit"
+                           Edge="Edge.Start"
+                           OnClick="@ToggleDrawer" />
+
+            <MudText Typo="Typo.h5" Class="ml-3">
+                Application
+            </MudText>
+
+            <MudSpacer />
+
+            <AuthorizeView>
+                <NotAuthorized>
+                    <MudButton Href="/login"
+                               Color="Color.Inherit"
+                               Variant="Variant.Text">
+                        Login
+                    </MudButton>
+                </NotAuthorized>
+
+                <Authorized Context="authState">
+                    <MudText Class="mr-2">
+                        @authState.User.Identity?.Name
+                    </MudText>
+
+                    <MudButton Href="/logout"
+                               Color="Color.Error"
+                               Variant="Variant.Text">
+                        Logout
+                    </MudButton>
+                </Authorized>
+            </AuthorizeView>
+
+            <MudIconButton Icon="@Icons.Material.Filled.MoreVert"
+                           Color="Color.Inherit"
+                           Edge="Edge.End" />
+        </MudAppBar>
+
+        <!-- Sidebar -->
+        <MudDrawer @bind-Open="_drawerOpen"
+                   ClipMode="DrawerClipMode.Always"
+                   Elevation="2">
+            <NavMenu />
+        </MudDrawer>
+
+        <!-- Main content -->
+        <MudMainContent>
+            <MudContainer Class="mt-4">
+                @Body
+            </MudContainer>
+        </MudMainContent>
+
+    </MudLayout>
+</CascadingAuthenticationState>
+
+@code {
+    bool _drawerOpen = true;
+
+    void ToggleDrawer()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+}

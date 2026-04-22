@@ -1,68 +1,59 @@
 ﻿@page "/Log"
 @rendermode InteractiveServer
 @inject HttpClient Http
-@inject AuthService Auth
 @using Varelager.ApiService.Data
+    <AuthorizeView Policy="AdminOnly">
+        <NotAuthorized>
+            <MudAlert Severity="Severity.Error" Variant="Variant.Filled">
+                Access denied
+            </MudAlert>
+        </NotAuthorized>
+        <Authorized>
+                <MudText Typo="Typo.h4" Class="mb-4">Log</MudText>
 
-@if (!Auth.IsLoggedIn)
-{
-    <p>You must log in to see this page</p>
-}
-else if (Auth.Type != "Admin")
-{
-    <p>Access denied</p>
-}
-else
-{
-    <h3>Log</h3>
+    <!-- purchase table -->
+    <MudPaper Class="pa-4 mb-6">
+        <MudText Typo="Typo.h6" Class="mb-2">Purchases</MudText>
 
-    @* purchase table *@
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Product Name</th>
-                <th>Amount Bought</th>
-                <th>Account Responsible</th>
-            </tr>
-        </thead>
+        <MudTable Items="purchases" Dense="true" Hover="true" Striped="true">
+            <HeaderContent>
+                <MudTh>Product Name</MudTh>
+                <MudTh>Amount Bought</MudTh>
+                <MudTh>Account Responsible</MudTh>
+            </HeaderContent>
 
-        <tbody>
-            @foreach (var purchase in purchases)
-            {
-                <tr>
-                    <td>@purchase.Product.Name</td>
-                    <td>@purchase.AmountSold</td>
-                    <td>@purchase.Account.Name</td>
-                </tr>
-            }
-    </tbody>
-</table>
+                <RowTemplate Context="purchase">
+                    <MudTd>@purchase.Product.Name</MudTd>
+                    <MudTd>@purchase.AmountSold</MudTd>
+                    <MudTd>@purchase.Account.Name</MudTd>
+                </RowTemplate>
+        </MudTable>
+    </MudPaper>
 
-    @* sale table *@
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Product Name</th>
-                <th>Amount Sold</th>
-                <th>Customer First Name</th>
-                <th>Customer Last Name</th>
-                <th>Account Name</th>
-            </tr>
-        </thead>
+    <!-- sales table -->
+    <MudPaper Class="pa-4">
+        <MudText Typo="Typo.h6" Class="mb-2">Sales</MudText>
 
-        <tbody>
-            @foreach (var sale in sales)
-            {
-                <tr>
-                    <td>@sale.Product.Name</td>
-                    <td>@sale.AmountSold</td>
-                    <td>@sale.Customer.FName</td>
-                    <td>@sale.Customer.LName</td>
-                    <td>@sale.Account.Name</td>
-                </tr>
-            }
-    </tbody>
-</table>
+        <MudTable Items="sales" Dense="true" Hover="true" Striped="true">
+            <HeaderContent>
+                <MudTh>Product Name</MudTh>
+                <MudTh>Amount Sold</MudTh>
+                <MudTh>Customer First Name</MudTh>
+                <MudTh>Customer Last Name</MudTh>
+                <MudTh>Account Name</MudTh>
+            </HeaderContent>
+
+                <RowTemplate Context="sale">
+                    <MudTd>@sale.Product.Name</MudTd>
+                    <MudTd>@sale.AmountSold</MudTd>
+                    <MudTd>@sale.Customer.FName</MudTd>
+                    <MudTd>@sale.Customer.LName</MudTd>
+                    <MudTd>@sale.Account.Name</MudTd>
+                </RowTemplate>
+        </MudTable>
+    </MudPaper>
+        </Authorized>
+    </AuthorizeView>
 
 @code {
     private List<Purchase_Log> purchases = new();
@@ -70,12 +61,13 @@ else
 
     private async Task ReturnAllInTable()
     {
-        purchases = await Http.GetFromJsonAsync<List<Purchase_Log>>("https://localhost:7507/purchase_Log"); // sends get request to url and turns data into list
-        sales = await Http.GetFromJsonAsync<List<Sale_Log>>("https://localhost:7507/sale_Log");
+        try { purchases = await Http.GetFromJsonAsync<List<Purchase_Log>>("https://localhost:7507/purchase_Log"); }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized) { Console.WriteLine("Unauthorized Get request to purchase_Log"); }
+    sales = await Http.GetFromJsonAsync<List<Sale_Log>>("https://localhost:7507/sale_Log");
     }
+
     protected override async Task OnInitializedAsync()
     {
         await ReturnAllInTable();
     }
-}
 }

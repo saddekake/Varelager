@@ -1,48 +1,31 @@
 ﻿@page "/"
 @page "/AccountLogin"
-@inject HttpClient Http
-@inject AuthService Auth /* adds auth service */
 @rendermode InteractiveServer
 
-<h3>Login</h3>
+<MudContainer MaxWidth="MaxWidth.Small" Class="mt-6">
+    <MudPaper Class="pa-6" Elevation="3">
+        <AuthorizeView>
+            <Authorized Context="auth">
+                <MudText Typo="Typo.h4" Class="mb-2">Signed in</MudText>
+                <MudText Class="mb-4">Hello, @auth.User.Identity?.Name</MudText>
 
-<input type="text" @bind="username" placeholder="Username" />
-<input type="password" @bind="password" placeholder="Password" />
-<button class="btn btn-primary" @onclick="Login">Login</button>
+                <MudStack Row="true" Spacing="2">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Error" Href="/logout">
+                        Logout
+                    </MudButton>
+                </MudStack>
+            </Authorized>
 
-<p>@message</p>
+            <NotAuthorized>
+                <MudText Typo="Typo.h4" Class="mb-2">Login</MudText>
+                <MudText Class="mb-4">Use Auth0 to sign in.</MudText>
 
-@code {
-    private string username = "";
-    private string password = "";
-    private string message = "";
-
-    private async Task Login()
-    {
-        try
-        {
-            var response = await Http.PostAsJsonAsync("https://localhost:7507/accounts/login", new
-            {
-                Name = username,
-                Password = password
-            });
-
-            if (response.IsSuccessStatusCode)
-            {
-                var user = await response.Content.ReadFromJsonAsync<AuthService>();
-
-                Auth.Id = user.Id;
-                Auth.Name = user.Name;
-                Auth.Type = user.Type;
-
-                message = "Success";
-            }
-            else
-                message = await response.Content.ReadAsStringAsync();
-        }
-        catch
-        {
-            message = "Error: server unreachable";
-        }
-    }
-}
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           Href="/login?returnUrl=/AccountCreation">
+                    Login with Auth0
+                </MudButton>
+            </NotAuthorized>
+        </AuthorizeView>
+    </MudPaper>
+</MudContainer>

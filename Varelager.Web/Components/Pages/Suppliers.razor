@@ -1,96 +1,151 @@
 ﻿@page "/Suppliers"
 @rendermode InteractiveServer
-@inject HttpClient Http
-@inject AuthService Auth
+@inject IHttpClientFactory Factory
 @using Varelager.ApiService.Data
 
-@if (!Auth.IsLoggedIn)
-{
-    <p>You must log in to see this page</p>
-}
-else if (Auth.Type != "Admin" && Auth.Type != "Warehouse")
-{
-    <p>Access denied</p>
-}
-else
-{
-    <h3>Suppliers</h3>
+<AuthorizeView Policy="WarehouseOnly">
+    <NotAuthorized>
+        <MudAlert Severity="Severity.Error" Variant="Variant.Filled">
+            Access denied
+        </MudAlert>
+    </NotAuthorized>
+    <Authorized>
+        <MudText Typo="Typo.h3">Suppliers</MudText>
 
-    @* ------------------------------------------ create *@
-    <input type="text" @bind="createInputName" placeholder="name" />
-    <input type="text" @bind="createInputPhone" placeholder="phone" />
-    <input type="text" @bind="createInputEmail" placeholder="email" />
-    <select @bind="createInputCountry">
-        <option value=0>-- select country --</option>
+        @* ------------------------------------------ create *@
+        <MudGrid Spacing="3">
+            <MudItem xs="12" md="6">
+                <MudPaper Class="pa-4" Elevation="2">
+                    <MudText Typo="Typo.h6" Class="mb-3">Create Supplier</MudText>
 
-        @foreach (var country in countries)
-        {
-            <option value=@country.Id>@country.Name</option>
-        }
-    </select>
-    <button class="btn btn-primary" @onclick="AddToTable">add name</button>
+                    <MudStack Spacing="2">
+                        <MudTextField T="string"
+                                      @bind-Value="createInputName"
+                                      Label="Name"
+                                      Variant="Variant.Outlined" />
 
-    <br />
-    <br />
-    @* ------------------------------------------ update *@
-    <input type="text" @bind="updateInputName" placeholder="name" />
-    <input type="text" @bind="updateInputPhone" placeholder="phone" />
-    <input type="text" @bind="updateInputEmail" placeholder="email" />
-    <select @bind="updateInputCountry">
-        <option value="">-- select country --</option>
+                        <MudTextField T="string"
+                                      @bind-Value="createInputPhone"
+                                      Label="Phone"
+                                      Variant="Variant.Outlined" />
 
-        @foreach (var country in countries)
-        {
-            <option value="@country.Id">@country.Name</option>
-        }
-    </select>
-    <br />
-    <input type="number" @bind="updateId" placeholder="id of row update" />
-    <br />
-    <button class="btn btn-primary" @onclick="UpdateRow">update</button>
+                        <MudTextField T="string"
+                                      @bind-Value="createInputEmail"
+                                      Label="Email"
+                                      Variant="Variant.Outlined" />
 
-    <br />
-    <br />
-    @* ------------------------------------------ delete *@
-    <input type="number" @bind="deleteId" placeholder="id of row delete" />
-    <button class="btn btn-primary" @onclick="DeleteRow">delete</button>
+                        <MudSelect T="int?"
+                                   @bind-Value="createInputCountry"
+                                   Label="Country"
+                                   Placeholder="-- Select Country --"
+                                   Variant="Variant.Outlined">
 
-    @* table *@
-    <table class="table">
-        <thead>
-            <tr>
-                <th>id</th>
-                <th>name</th>
-                <th>phone</th>
-                <th>email</th>
-                <th>country</th>
-            </tr>
-        </thead>
+                            @foreach (var country in countries)
+                            {
+                                <MudSelectItem Value="@((int?)country.Id)">
+                                    @country.Name
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
 
-        <tbody>
-            @foreach (var item in items)
-            {
-                <tr>
-                    <td>@item.Id</td>
-                    <td>@item.Name</td>
-                    <td>@item.Phone</td>
-                    <td>@item.Email</td>
-                    <td>@item.Country.Name</td>
-                </tr>
-            }
-        </tbody>
-    </table>
+                        <MudButton Color="Color.Primary"
+                                   Variant="Variant.Filled"
+                                   OnClick="AddToTable">
+                            Add supplier
+                        </MudButton>
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+            @* ------------------------------------------ update *@
+            <MudItem xs="12" md="6">
+                <MudPaper Class="pa-4" Elevation="2">
+                    <MudText Typo="Typo.h6" Class="mb-3">Update Supplier</MudText>
 
-    @code {
+                    <MudStack Spacing="2">
+                        <MudTextField T="string"
+                                      @bind-Value="updateInputName"
+                                      Label="Name"
+                                      Variant="Variant.Outlined" />
+
+                        <MudTextField T="string"
+                                      @bind-Value="updateInputPhone"
+                                      Label="Phone"
+                                      Variant="Variant.Outlined" />
+
+                        <MudTextField T="string"
+                                      @bind-Value="updateInputEmail"
+                                      Label="Email"
+                                      Variant="Variant.Outlined" />
+
+                        <MudSelect T="int?"
+                                   @bind-Value="updateInputCountry"
+                                   Label="Country"
+                                   Placeholder="-- Select Country --"
+                                   Variant="Variant.Outlined">
+
+                            @foreach (var country in countries)
+                            {
+                                <MudSelectItem Value="@((int?)country.Id)">
+                                    @country.Name
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
+
+                        <MudButton Color="Color.Primary"
+                                   Variant="Variant.Filled"
+                                   OnClick="UpdateRow">
+                            Update supplier
+                        </MudButton>
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+            @* ------------------------------------------ delete *@
+            <MudItem xs="8" md="4">
+                <MudPaper Class="pa-4" Elevation="2">
+                    <MudText Typo="Typo.h6" Class="mb-3">Delete Supplier</MudText>
+                    <MudInput T="int" @bind-Value="deleteId" placeholder="ID of deleting row" />
+                    <MudButton Color="Color.Primary" Variant=Variant.Filled" OnClick="DeleteRow">Delete</MudButton>
+                </MudPaper>
+            </MudItem>
+
+            @* table *@
+            <MudItem xs="12">
+                <MudPaper Class="pa-4" Elevation="2">
+                    <MudText Typo="Typo.h6" Class="mb-3">Suppliers Table</MudText>
+
+                    <MudTable Items="items" Dense="true" Hover="true" Striped="true">
+                        <HeaderContent>
+                            <MudTh>ID</MudTh>
+                            <MudTh>Name</MudTh>
+                            <MudTh>Phone</MudTh>
+                            <MudTh>Email</MudTh>
+                            <MudTh>Country</MudTh>
+                        </HeaderContent>
+                        <RowTemplate context="sup">
+                            <MudTd DataLabel="ID">@sup.Id</MudTd>
+                            <MudTd DataLabel="Name">@sup.Name</MudTd>
+                            <MudTd DataLabel="Phone">@sup.Phone</MudTd>
+                            <MudTd DataLabel="Email">@sup.Email</MudTd>
+                            <MudTd DataLabel="Country">@sup.Country.Name</MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    </Authorized>
+</AuthorizeView>
+@code {
+    private HttpClient Api => Factory.CreateClient("Api");
+
     private string createInputName = "";
     private string createInputPhone = "";
     private string createInputEmail = "";
-    private int createInputCountry;
+    private int? createInputCountry;
 
     private string updateInputName = "";
     private string updateInputPhone = "";
     private string updateInputEmail = "";
-    private int updateInputCountry;
+    private int? updateInputCountry;
     private int updateId;
 
     private int deleteId;
@@ -103,9 +158,9 @@ else
         if (!string.IsNullOrWhiteSpace(createInputName) &&
             !string.IsNullOrWhiteSpace(createInputPhone) &&
             !string.IsNullOrWhiteSpace(createInputEmail) &&
-            createInputCountry >0)
+            createInputCountry.HasValue)
         {
-            await Http.PostAsJsonAsync("https://localhost:7507/suppliers", new
+            await Api.PostAsJsonAsync("https://localhost:7507/suppliers", new
             {
                 Name = createInputName,
                 Phone = createInputPhone,
@@ -116,17 +171,21 @@ else
         createInputName = "";
         createInputPhone = "";
         createInputEmail = "";
-        createInputCountry = 0;
+        createInputCountry = null;
         await ReturnAllInTable();
     }
     private async Task ReturnAllInTable()
     {
-        items = await Http.GetFromJsonAsync<List<Supplier>>("https://localhost:7507/suppliers"); // sends get request to url and turns data into list
+        items = await Api.GetFromJsonAsync<List<Supplier>>("https://localhost:7507/suppliers"); // sends get request to url and turns data into list
     }
 
     private async Task LoadCountries()
     {
-        countries = await Http.GetFromJsonAsync<List<Country>>("https://localhost:7507/countries");
+        countries = await Api.GetFromJsonAsync<List<Country>>(
+            "https://localhost:7507/countries"
+        ) ?? new();
+
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task UpdateRow()
@@ -138,7 +197,7 @@ else
         updateInputCountry > 0 &&
         updateId > 0)
         {
-            await Http.PatchAsJsonAsync($"https://localhost:7507/suppliers/{updateId}", new
+            await Api.PatchAsJsonAsync($"https://localhost:7507/suppliers/{updateId}", new
             {
                 Name = updateInputName,
                 Phone = updateInputPhone,
@@ -157,15 +216,14 @@ else
     {
         if (deleteId > 0)
         {
-            await Http.DeleteAsync($"https://localhost:7507/suppliers/{deleteId}"); // sends delete request to url with id
+            await Api.DeleteAsync($"https://localhost:7507/suppliers/{deleteId}"); // sends delete request to url with id
         }
         deleteId = 0;
         await ReturnAllInTable();
     }
     protected override async Task OnInitializedAsync()
     {
-        await ReturnAllInTable();
         await LoadCountries();
+        await ReturnAllInTable();
     }
-}
 }

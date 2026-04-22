@@ -8,7 +8,7 @@ public static class Sale_LogEndpoints
 {
     public static void MapSale_LogEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapPost("/sale_Log", CreateSale_Log.Handle);
-        app.MapGet("/sale_Log", ReturnSale_Log.Handle);
+        app.MapPost("/sale_Log", CreateSale_Log.Handle).RequireAuthorization();
+        app.MapGet("/sale_Log", ReturnSale_Log.Handle).RequireAuthorization();
     }
 }

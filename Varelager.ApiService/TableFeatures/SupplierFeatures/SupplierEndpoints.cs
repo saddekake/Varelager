@@ -7,10 +7,10 @@ public static class SupplierEndpoints
 {
     public static void MapSupplierEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapPost("/suppliers", CreateSupplier.Handle);
-        app.MapGet("/suppliers", ReturnSupplier.Handle);
-        app.MapPatch("/suppliers/{id}", UpdateSupplier.Handle);
-        app.MapDelete("/suppliers/{id}", DeleteSupplier.Handle);
-        app.MapGet("/suppliers/{name}", ReturnSpecificSupplier.Handle);
+        app.MapPost("/suppliers", CreateSupplier.Handle).RequireAuthorization();
+        app.MapGet("/suppliers", ReturnSupplier.Handle).RequireAuthorization();
+        app.MapPatch("/suppliers/{id}", UpdateSupplier.Handle).RequireAuthorization();
+        app.MapDelete("/suppliers/{id}", DeleteSupplier.Handle).RequireAuthorization();
+        app.MapGet("/suppliers/{name}", ReturnSpecificSupplier.Handle).RequireAuthorization();
     }
 }

@@ -1,80 +1,106 @@
 ﻿@page "/SellProduct"
 @rendermode InteractiveServer
 @inject HttpClient Http
-@inject AuthService Auth
 @using Varelager.ApiService.Data
 
-@if (!Auth.IsLoggedIn)
-{
-    <p>You must log in to see this page</p>
-}
-else if (Auth.Type != "Admin" && Auth.Type != "Sales")
-{
-    <p>Access denied</p>
-}
-else
-{
-    <h3>Sell Product</h3>
+<AuthorizeView Policy="SalesOnly">
+    <NotAuthorized>
+        <MudAlert Severity="Severity.Error" Variant="Variant.Filled">
+            Access denied
+        </MudAlert>
+    </NotAuthorized>
+    <Authorized>
+        <MudAlert Severity="Severity.Error" Variant="Variant.Filled">
+            @ErrorMessage
+        </MudAlert>
+        <MudText Typo="Typo.h3">Sell Product</MudText>
+        <MudGrid Spacing="3">
+            <MudItem xs="12" md="6">
+                <MudPaper Class="pa-4" Elevation="2">
+                    <MudText Typo="Typo.h6" Class="mb-3">Sell Product</MudText>
 
-    <p>Product: </p>
-    <input @bind="ProductInputName" placeholder="product" />
-    <br />
-    <br />
-    <p>Amount sold: </p>
-    <input @bind="ProductInputAmount" type="number" placeholder="amount sold" />
-    <br />
-    <br />
-    <p>Customer: </p>
-    <select @bind="ProductInputCustomer">
-        <option value=0>-- select customer --</option>
+                    <MudStack Spacing="2">
+                        <MudSelect T="int?"
+                                   @bind-Value="ProductInputId"
+                                   Label="Product"
+                                   Placeholder="-- Select Product --"
+                                   Variant="Variant.Outlined">
+                            @foreach (var product in items)
+                            {
+                                <MudSelectItem Value="@((int?)product.Id)">
+                                    @product.Name
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
 
-        @foreach (var customer in customers)
-        {
-            <option value="@customer.Id">@($"{customer.FName} {customer.LName}")</option>
-        }
-    </select>
-    <br />
-    <br />
-    <button @onclick="Confirm" class="btn btn-primary">Confirm</button>
-    <br />
-    <br />
-    <p>delivery cost: </p><p>@DeliveryCost</p>
-    <br />
-    <br />
+                        <MudSelect T="int?"
+                                   @bind-Value="ProductInputCustomer"
+                                   Label="Customer"
+                                   Placeholder="-- Select Customer --"
+                                   Variant="Variant.Outlined">
+                            @foreach (var customer in customers)
+                            {
+                                <MudSelectItem Value="@((int?)customer.Id)">
+                                    @customer.FName @customer.LName
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
 
-    @* table *@
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Description</th>
-                <th>Supplier name</th>
-                <th>Weight</th>
-                <th>Stock</th>
-            </tr>
-        </thead>
+                        <MudTextField T="int"
+                                      @bind-Value="ProductInputAmount"
+                                      Label="Amount"
+                                      Variant="Variant.Outlined" />
 
-        <tbody>
-            @foreach (var item in items)
-            {
-                <tr>
-                    <td>@item.Name</td>
-                    <td>@item.Description</td>
-                    <td>@item.Supplier.Name</td>
-                    <td>@item.Weight</td>
-                    <td>@item.Stock</td>
-                </tr>
-            }
-    </tbody>
-</table>
+                        <MudButton Color="Color.Primary"
+                                   Variant="Variant.Filled"
+                                   OnClick="Confirm">
+                            Sell Product
+                        </MudButton>
 
-    @code {
-    private string ProductInputName = "";
+                        <MudText Typo="Typo.body1">
+                            <span style="opacity:0.7;">Delivery cost:</span>
+                            @DeliveryCost
+                        </MudText>
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+
+            @* table *@
+            <MudItem xs="12">
+                <MudPaper Class="pa-4" Elevation="2">
+                    <MudText Typo="Typo.h6" Class="mb-3">Products Table</MudText>
+
+                    <MudTable Items="items" Dense="true" Hover="true" Striped="true">
+                        <HeaderContent>
+                            <MudTh>ID</MudTh>
+                            <MudTh>Name</MudTh>
+                            <MudTh>Description</MudTh>
+                            <MudTh>Weight</MudTh>
+                            <MudTh>Stock</MudTh>
+                            <MudTh>Supplier</MudTh>
+                        </HeaderContent>
+                        <RowTemplate context="pro">
+                            <MudTd DataLabel="ID">@pro.Id</MudTd>
+                            <MudTd DataLabel="Name">@pro.Name</MudTd>
+                            <MudTd DataLabel="Description">@pro.Description</MudTd>
+                            <MudTd DataLabel="Weight">@pro.Weight</MudTd>
+                            <MudTd DataLabel="Stock">@pro.Stock</MudTd>
+                            <MudTd DataLabel="Supplier">@pro.Supplier.Name</MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    </Authorized>
+</AuthorizeView>
+@code {
+    private int? ProductInputId;
     private int ProductInputAmount;
-    private int ProductInputCustomer; // for the sales log page
+    private int? ProductInputCustomer; // for the sales log page
     private double DeliveryCost;
     private List<Product> items = new();
     private List<Customer> customers = new();
+    private string? ErrorMessage;
 
     private async Task ReturnAllInTable()
     {
@@ -91,47 +117,70 @@ else
 
     private async Task Confirm()
     {
-        if (ProductInputAmount <= 0 || ProductInputCustomer <= 0)
+        ErrorMessage = null;
+
+        try
         {
-            return;
+            if (ProductInputId is null || ProductInputAmount < 1 || ProductInputCustomer is null)
+            {
+                ErrorMessage = "Select a product, customer, and amount.";
+                return;
+            }
+
+            var productresponse = await Http.GetAsync($"https://localhost:7507/products/{ProductInputId}");
+
+            if (!productresponse.IsSuccessStatusCode)
+            {
+                ErrorMessage = $"{(int)productresponse.StatusCode} {productresponse.ReasonPhrase}";
+                return;
+            }
+
+            var product = await productresponse.Content.ReadFromJsonAsync<Product>();
+            if (product is null)
+            {
+                ErrorMessage = "Could not read product data.";
+                return;
+            }
+
+            var customer = customers.FirstOrDefault(c => c.Id == ProductInputCustomer.Value);
+            if (customer == null)
+            {
+                ErrorMessage = "Customer not found.";
+                return;
+            }
+
+            if (customer.Country == null)
+            {
+                ErrorMessage = "Customer country was not loaded.";
+                return;
+            }
+
+            int productID = product.Id;
+            int newStock = product.Stock - ProductInputAmount;
+
+            CalculateDelivery(product.Weight, customer.Country.Distance);
+
+            await Http.PatchAsJsonAsync($"https://localhost:7507/products/{productID}", new
+            {
+                Stock = newStock
+            });
+
+            await Http.PostAsJsonAsync("https://localhost:7507/sale_Log", new
+            {
+                ProductId = productID,
+                AmountSold = ProductInputAmount,
+                CustomerId = ProductInputCustomer,
+            });
+
+            ProductInputAmount = 0;
+            ProductInputCustomer = null;
+            ProductInputId = null;
+            await ReturnAllInTable();
         }
-        var productresponse = await Http.GetAsync($"https://localhost:7507/products/{ProductInputName}");
-
-        if (!productresponse.IsSuccessStatusCode)
+        catch (Exception ex)
         {
-            Console.WriteLine("product not found");
-            return;
+            ErrorMessage = ex.Message;
         }
-
-        var product = await productresponse.Content.ReadFromJsonAsync<Product>();
-
-        var customer = customers.FirstOrDefault(c => c.Id == ProductInputCustomer);
-        if (customer == null)
-        {
-            Console.WriteLine("customer not found");
-            return;
-        }
-
-        int productID = product.Id;
-        int newStock = product.Stock - ProductInputAmount;
-
-        CalculateDelivery(product.Weight, customer.Country.Distance);
-
-        await Http.PatchAsJsonAsync($"https://localhost:7507/products/{productID}", new
-        {
-            Stock = newStock
-        });
-        // logging
-        await Http.PostAsJsonAsync("https://localhost:7507/sale_Log", new
-        {
-            ProductId = productID,
-            AmountSold = ProductInputAmount,
-            CustomerId = ProductInputCustomer,
-            AccountId = Auth.Id,
-        });
-        ProductInputName = "";
-        ProductInputAmount = 0;
-        await ReturnAllInTable();
     }
 
     protected override async Task OnInitializedAsync()
@@ -139,5 +188,4 @@ else
         await ReturnAllInTable();
         await LoadCustomers();
     }
-}
 }
